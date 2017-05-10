@@ -18,8 +18,6 @@ module mem_tb();
     	data_out
   	);
 
-reg [0:3] i;
-
 initial begin
 	#0
 	wr = 0;
