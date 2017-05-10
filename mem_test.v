@@ -1,3 +1,4 @@
+`include "mem.v"
 
 module clock(
 	output reg clk
