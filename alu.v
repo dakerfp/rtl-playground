@@ -9,14 +9,14 @@
 module alu(
 	input  [2:0]   opcode,
 	input  [N-1:0] op_a, op_b,
-	output reg [N-1:0] result
+	output wire [N-1:0] out
 );
 
 parameter N = 32;
 
-
 // result used in LHS of always block-> must be reg
-// reg [N-1:0] result;
+reg [N-1:0] result;
+assign out = result;
 
 always @* begin
 	case (opcode)
