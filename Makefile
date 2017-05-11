@@ -2,7 +2,7 @@
 VC=iverilog
 TMP_OUTPUT=/tmp/verilog_test.txt
 
-test: mem.tb alu.tb
+test: mem.tb alu.tb cpu.tb
 	@rm -rf *.tb
 
 %.tb: %_test.v
