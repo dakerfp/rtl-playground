@@ -16,6 +16,7 @@ module cpu(
 	input rst,
 	input clk,
 	input [N-1:0] instruction,
+	output reg [N-1:0] write_addr,
 	output reg [N-1:0] outport
 );
 
@@ -67,6 +68,7 @@ always @(posedge clk or posedge rst) begin
 			end
 			`INST_WRO: begin
 				outport = registers[reg_a];
+				write_addr = registers[reg_b];
 				pc = pc + 1;
 			end
 			`INST_LDI: begin

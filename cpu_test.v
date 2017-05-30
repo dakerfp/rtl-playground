@@ -7,9 +7,10 @@ module cpu_tb();
 reg rst;
 reg clk;
 reg [15:0] inst;
+wire [15:0] wr_addr;
 wire [15:0] out;
 
-cpu #(.N(16), .REGN(4)) cpu0(rst, clk, inst, out);
+cpu #(.N(16), .REGN(4)) cpu0(rst, clk, inst, wr_addr, out);
 
 initial begin
 	#1 rst = 1;
