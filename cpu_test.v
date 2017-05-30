@@ -25,7 +25,7 @@ initial begin
 		$finish_and_return(1);
 	end
 
-	if (out != 8'd42) begin
+	if (out != 16'd42) begin
 		$display("LOAD & OUT");
 		$display("wrong value on out: %d", out);
 		$finish_and_return(1);
