@@ -2,6 +2,9 @@
 VC=iverilog
 TMP_OUTPUT=/tmp/verilog_test.txt
 
+cpu_sim: cpu_sim.v
+	@$(VC) $^ -o $@
+
 test: mem.tb alu.tb cpu.tb
 	@rm -rf *.tb
 

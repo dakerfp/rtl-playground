@@ -63,7 +63,7 @@ assign immi = {{22{sign}}, instruction[30:20]};
 assign imms = {{22{sign}}, instruction[30:25], instruction[11:8], instruction[7]};
 assign immb = {{20{sign}}, instruction[7], instruction[30:25], instruction[11:8], 1'd0};
 assign immu = {instruction[31:12], 12'd0};
-assign immj = {{11{sign}},instruction[19:12],instruction[20],INST_HLTruction[32:21], 1'd0};
+assign immj = {{11{sign}},instruction[19:12],instruction[20],instruction[32:21], 1'd0};
 
 function conditional_branch;
 input rs1, rs2, funct;
@@ -116,6 +116,14 @@ begin
 end
 endfunction
 
+function add_alu; // TODO: ensure they synthetize to the same module
+input a, b;
+begin
+	add_alu = alu(a, b, 32'dx, `FUNCT_ADD_SUB, 3'd0);
+end
+endfunction
+
+
 always @(posedge clk or posedge rst) begin
 	if (rst) begin
 		// TODO: registers[REGN-1:0] = 0;
@@ -128,21 +136,21 @@ always @(posedge clk or posedge rst) begin
 			pc = pc + 4;
 		end
 		`OP_AUIPC: begin
-			regs[rd] = pc + $signed(immu); // TODO: use alu
+			regs[rd] = add_alu(pc, immu); // TODO: use alu
 			pc = pc + 4;
 		end
 		`OP_BRANCH: begin
 			if (conditional_branch(regs[rs1], regs[rs2], funct3))
-				pc = pc + $signed(immb); // TODO: use alu
+				pc = add_alu(pc, immb); // TODO: use alu
 			else
 				pc = pc + 4;
 		end
 		`OP_JAL: begin
-			pc = pc + $signed(immj); // TODO: use alu
+			pc = add_alu(pc, immj);
 			regs[rd] = pc + 4;
 		end
 		`OP_JALR: begin
-			pc = regs[rs1] + $signed(immi); // TODO: use alu
+			pc = add_alu(regs[rs1], immi);
 			regs[rd] = pc + 4;
 		end
 		`OP: begin
@@ -154,12 +162,12 @@ always @(posedge clk or posedge rst) begin
 			pc = pc + 4;
 		end
 		`OP_LOAD: begin
-			read_addr = regs[rs1] + immi; // XXX: broken
+			read_addr <= add_alu(regs[rs1], immi);
 			regs[rd] = read_data;
 			pc = pc + 4;
 		end
 		`OP_STORE: begin
-			write_addr = regs[rs1] + imms;
+			write_addr = add_alu(regs[rs1], imms);
 			write_data = regs[rs2];
 			pc = pc + 4;
 		end
