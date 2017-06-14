@@ -11,21 +11,28 @@
 `define OP_FENCE 7'd8
 `define OP_SYSTEM 7'd9
 
-`define FUNCT_ADD 3'b000
-`define FUNCT_SUB 3'b000
-`define FUNCT_SLT 3'b010
-`define FUNCT_SLTU 3'b011
-`define FUNCT_XOR 3'b100
-`define FUNCT_OR  3'b110
-`define FUNCT_AND 3'b111
-`define FUNCT_SLL 3'b001
-`define FUNCT_SRL_SRA 3'b101
-`define FUNCT_BEQ 3'b000
-`define FUNCT_BNEQ 3'b001
-`define FUNCT_BLT 3'b010
-`define FUNCT_BLTU 3'b011
-`define FUNCT_BGE 3'b100
-`define FUNCT_BGEU 3'b101
+`define FUNCT3_ADD 3'b000
+`define FUNCT3_SUB 3'b000
+`define FUNCT3_SLT 3'b010
+`define FUNCT3_SLTU 3'b011
+`define FUNCT3_XOR 3'b100
+`define FUNCT3_OR  3'b110
+`define FUNCT3_AND 3'b111
+`define FUNCT3_SLL 3'b001
+`define FUNCT3_SRL_SRA 3'b101
+`define FUNCT3_BEQ 3'b000
+`define FUNCT3_BNEQ 3'b001
+`define FUNCT3_BLT 3'b010
+`define FUNCT3_BLTU 3'b011
+`define FUNCT3_BGE 3'b100
+`define FUNCT3_BGEU 3'b101
+
+`define CSR_RDCYCLE 12'd0
+`define CSR_RDCYCLEH 12'd1
+`define CSR_RDTIME 12'd2
+`define CSR_RDTIMEH 12'd3
+`define CSR_RDINSTRET 12'd4
+`define CSR_RDINSTRETH 12'd5
 
 module RISCV32I(
 	input wire rst,
@@ -80,12 +87,12 @@ function conditional_branch;
 input rs1, rs2, funct;
 begin
 	case (funct)
-	`FUNCT_BEQ: conditional_branch = rs1 == rs2;
-	`FUNCT_BNEQ: conditional_branch = rs1 != rs2;
-	`FUNCT_BLT: conditional_branch = $signed(rs1) < $signed(rs2);
-	`FUNCT_BLTU: conditional_branch = rs1 < rs2;
-	`FUNCT_BGE: conditional_branch = $signed(rs1) >= $signed(rs2);
-	`FUNCT_BGEU: conditional_branch = rs1 >= rs2;
+	`FUNCT3_BEQ: conditional_branch = rs1 == rs2;
+	`FUNCT3_BNEQ: conditional_branch = rs1 != rs2;
+	`FUNCT3_BLT: conditional_branch = $signed(rs1) < $signed(rs2);
+	`FUNCT3_BLTU: conditional_branch = rs1 < rs2;
+	`FUNCT3_BGE: conditional_branch = $signed(rs1) >= $signed(rs2);
+	`FUNCT3_BGEU: conditional_branch = rs1 >= rs2;
 	default: conditional_branch = 0;
 	endcase
 end
@@ -95,25 +102,25 @@ function alu;
 input a, b, shamt, funct3, funct7;
 begin
 	case (funct3)
-	`FUNCT_SLT:
+	`FUNCT3_SLT:
 		if ($signed(a) < $signed(b)) alu = 1;
 		else alu = 0;
-	`FUNCT_SLTU:
+	`FUNCT3_SLTU:
 		if (a < b) alu = 1;
 		else alu = 0;
-	`FUNCT_ADD, `FUNCT_SUB: case (funct7)
+	`FUNCT3_ADD, `FUNCT3_SUB: case (funct7)
 		7'b0100000: alu = $signed(a) - $signed(b);
 		7'b0000000: alu = $signed(a) + $signed(b);
 		default: alu = 'bx;
 	endcase
-	`FUNCT_AND: alu = a & b;
-	`FUNCT_OR: alu = a | b;
-	`FUNCT_XOR: alu = a ^ b;
-	`FUNCT_SLL: case(funct7)
+	`FUNCT3_AND: alu = a & b;
+	`FUNCT3_OR: alu = a | b;
+	`FUNCT3_XOR: alu = a ^ b;
+	`FUNCT3_SLL: case(funct7)
 		7'b0000000: alu = a << shamt;
 		default: alu = 'bx;
 	endcase
-	`FUNCT_SRL_SRA: case(funct7)
+	`FUNCT3_SRL_SRA: case(funct7)
 		7'b0000000: alu = a >> shamt;
 		7'b0100000: alu = $signed(a) >>> shamt;
 		default: alu = 'bx;
@@ -126,7 +133,7 @@ endfunction
 function add_alu; // TODO: ensure they synthetize to the same module
 input a, b;
 begin
-	add_alu = alu(a, b, 32'dx, `FUNCT_ADD, 3'd0);
+	add_alu = alu(a, b, 32'dx, `FUNCT3_ADD, 3'd0);
 end
 endfunction
 
