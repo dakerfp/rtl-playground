@@ -50,7 +50,7 @@ module RISCV32I(
 	input wire clk,
 	input wire [XLEN-1:0] instruction,
 	input wire [XLEN-1:0] read_data,
-	output reg [XLEN-1:0] instr_addr,
+	output reg [XLEN-1:0] instr_fetch_addr,
 	output reg [XLEN-1:0] read_addr,
 	output reg [XLEN-1:0] write_addr,
 	output reg [XLEN-1:0] write_data,
