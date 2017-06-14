@@ -61,6 +61,8 @@ parameter XLEN=32;
 
 reg [XLEN-1:0] regs [31:0]; // regs[0] == 0
 reg [XLEN-1:0] pc;
+
+// system registers
 reg [64-1:0] rdcycle;
 
 // INSTRUCTIONS DECODING
@@ -148,14 +150,6 @@ begin
 end
 endfunction
 
-always @(posedge clk or posedge rst) begin
-	if (rst) begin
-		rdcycle = 0;
-	end else if (clk) begin
-		rdcycle = rdcycle + 1;
-	end
-end
-
 // Update code for pc
 always @(posedge clk or posedge rst) begin
 	if (rst) begin
@@ -199,6 +193,15 @@ always @(posedge clk or posedge rst) begin
 			write_data = regs[rs2];
 		end
 		endcase
+	end
+end
+
+// rdcycle
+always @(posedge clk or posedge rst) begin
+	if (rst) begin
+		rdcycle = 0;
+	end else if (clk) begin
+		rdcycle = rdcycle + 1;
 	end
 end
 
