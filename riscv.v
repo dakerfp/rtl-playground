@@ -99,21 +99,22 @@ begin
 		else alu = 0;
 	`FUNCT_ADD_SUB: case (funct7)
 		7'b0100000: alu = $signed(a) - $signed(b);
-		default: alu = $signed(a) + $signed(b);
+		7'b0100000: alu = $signed(a) + $signed(b);
+		default: alu = 'bx;
 	endcase
 	`FUNCT_AND: alu = a & b;
 	`FUNCT_OR: alu = a | b;
 	`FUNCT_XOR: alu = a ^ b;
 	`FUNCT_SLL: case(funct7)
 		7'b0000000: alu = a << shamt;
-		default: alu = 0;
+		default: alu = 'bx;
 	endcase
 	`FUNCT_SRL_SRA: case(funct7)
 		7'b0000000: alu = a >> shamt;
 		7'b0100000: alu = $signed(a) >>> shamt;
-		default: alu = 0;
+		default: alu = 'bx;
 	endcase
-	default: alu = 0;
+	default: alu = 'bx;
 	endcase
 end
 endfunction
@@ -126,52 +127,47 @@ end
 endfunction
 
 
+// Update code for pc
 always @(posedge clk or posedge rst) begin
 	if (rst) begin
-		// TODO: registers[REGN-1:0] = 0;
 		pc = 0;
-		write_data = 32'd0;
 	end else if (clk) begin
 		case (opcode)
-		`OP_LUI: begin
-			regs[rd] = immu;
-			pc = pc + 4;
-		end
-		`OP_AUIPC: begin
-			regs[rd] = add_alu(pc, immu); // TODO: use alu
-			pc = pc + 4;
-		end
+		`OP_JAL: pc = add_alu(pc, immj);
+		`OP_JALR: pc = add_alu(regs[rs1], immi);
 		`OP_BRANCH: begin
 			if (conditional_branch(regs[rs1], regs[rs2], funct3))
 				pc = add_alu(pc, immb); // TODO: use alu
 			else
 				pc = pc + 4;
 		end
-		`OP_JAL: begin
-			pc = add_alu(pc, immj);
-			regs[rd] = pc + 4;
-		end
-		`OP_JALR: begin
-			pc = add_alu(regs[rs1], immi);
-			regs[rd] = pc + 4;
-		end
-		`OP: begin
-			regs[rd] = alu(regs[rs1], regs[rs2], regs[rs2], funct3, funct7);
-			pc = pc + 4;
-		end
-		`OP_IMM: begin
-			regs[rd] = alu(regs[rs1], immi, shamt, funct3, funct7);
-			pc = pc + 4;
-		end
+		default: pc = pc + 4;
+		endcase
+	end
+end
+
+// Update code for regs[rd]
+always @(posedge clk or posedge rst) begin
+	if (rst) begin
+		// TODO: registers[REGN-1:0] = 0;
+		write_data = 32'd0;
+		regs[2] = 32'd0;
+		// regs[0] = 32'd0;
+	end else if (clk) begin
+		case (opcode)
+		`OP_LUI: regs[rd] = immu;
+		`OP_AUIPC: regs[rd] = add_alu(pc, immu); // TODO: use alu
+		`OP_JAL: regs[rd] = pc + 4;
+		`OP_JALR: regs[rd] = pc + 4;
+		`OP: regs[rd] = alu(regs[rs1], regs[rs2], regs[rs2], funct3, funct7);
+		`OP_IMM: regs[rd] = alu(regs[rs1], immi, shamt, funct3, funct7);
 		`OP_LOAD: begin
 			read_addr <= add_alu(regs[rs1], immi);
 			regs[rd] = read_data;
-			pc = pc + 4;
 		end
 		`OP_STORE: begin
 			write_addr = add_alu(regs[rs1], imms);
 			write_data = regs[rs2];
-			pc = pc + 4;
 		end
 		endcase
 	end
