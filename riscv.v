@@ -1,15 +1,26 @@
-
-`define OP 7'b0010010
-`define OP_IMM 7'b0010011
-`define OP_LUI 7'd1
-`define OP_AUIPC 7'd2
-`define OP_JAL 7'd3
-`define OP_JALR 7'd4
-`define OP_BRANCH 7'd5
-`define OP_LOAD 7'd6
-`define OP_STORE 7'd7
-`define OP_FENCE 7'd8
-`define OP_SYSTEM 7'd9
+// RV32I Base Instruction Set
+// LUI
+`define OP_LUI    7'b0110111
+// AUIPC
+`define OP_AUIPC  7'b0010111
+// JAL
+`define OP_JAL    7'b1101111
+// JALR
+`define OP_JALR   7'b1100111
+// BEQ, BNE, BLT, BGE, BLTU, BGEU
+`define OP_BRANCH 7'b1100011
+// LB, LH, LW, LBU, LHU
+`define OP_LOAD   7'b0000011
+// SB, SH, SW
+`define OP_STORE  7'b0100011
+// ADDI, SLTI, SLTIU, XORI, ORI, ANDI, SLLI, SRLI, SRAI
+`define OP_IMM    7'b0010011
+// ADD, SUB, SLL, SLT, SLTU, XOR, SRL, SRA, OR, AND
+`define OP        7'b0110011
+// FENCE, FENCE.I
+`define OP_FENCE  7'b0001111
+// ECALL, EBREAK, CSRRW, CSRRS, CSRRC, CSRRWI, CSRRSI, CSRRCI
+`define OP_SYSTEM 7'b1110011
 
 `define FUNCT3_ADD 3'b000
 `define FUNCT3_SUB 3'b000
