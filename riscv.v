@@ -79,6 +79,7 @@ wire [XLEN-1:0] imms;
 wire [XLEN-1:0] immb;
 wire [XLEN-1:0] immu;
 wire [XLEN-1:0] immj;
+wire [XLEN-1:0] uimm;
 wire sign;
 
 assign op_code = instruction[6:0];
