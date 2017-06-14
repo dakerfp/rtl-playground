@@ -98,15 +98,15 @@ assign uimm = {instruction[19:15]};
 
 
 function conditional_branch;
-input rs1, rs2, funct;
+input a, b, funct;
 begin
 	case (funct)
-	`FUNCT3_BEQ: conditional_branch = rs1 == rs2;
-	`FUNCT3_BNEQ: conditional_branch = rs1 != rs2;
-	`FUNCT3_BLT: conditional_branch = $signed(rs1) < $signed(rs2);
-	`FUNCT3_BLTU: conditional_branch = rs1 < rs2;
-	`FUNCT3_BGE: conditional_branch = $signed(rs1) >= $signed(rs2);
-	`FUNCT3_BGEU: conditional_branch = rs1 >= rs2;
+	`FUNCT3_BEQ: conditional_branch = a == b;
+	`FUNCT3_BNEQ: conditional_branch = a != b;
+	`FUNCT3_BLT: conditional_branch = $signed(a) < $signed(b);
+	`FUNCT3_BLTU: conditional_branch = a < b;
+	`FUNCT3_BGE: conditional_branch = $signed(a) >= $signed(b);
+	`FUNCT3_BGEU: conditional_branch = a >= b;
 	default: conditional_branch = 0;
 	endcase
 end
@@ -116,12 +116,8 @@ function alu;
 input a, b, shamt, funct3, funct7;
 begin
 	case (funct3)
-	`FUNCT3_SLT:
-		if ($signed(a) < $signed(b)) alu = 1;
-		else alu = 0;
-	`FUNCT3_SLTU:
-		if (a < b) alu = 1;
-		else alu = 0;
+	`FUNCT3_SLT: alu = $signed(a) < $signed(b);
+	`FUNCT3_SLTU: alu = a < b;
 	`FUNCT3_ADD, `FUNCT3_SUB: case (funct7)
 		7'b0100000: alu = $signed(a) - $signed(b);
 		7'b0000000: alu = $signed(a) + $signed(b);
