@@ -11,7 +11,8 @@
 `define OP_FENCE 7'd8
 `define OP_SYSTEM 7'd9
 
-`define FUNCT_ADD_SUB 3'b000
+`define FUNCT_ADD 3'b000
+`define FUNCT_SUB 3'b000
 `define FUNCT_SLT 3'b010
 `define FUNCT_SLTU 3'b011
 `define FUNCT_XOR 3'b100
@@ -103,9 +104,9 @@ begin
 	`FUNCT_SLTU:
 		if (a < b) alu = 1;
 		else alu = 0;
-	`FUNCT_ADD_SUB: case (funct7)
+	`FUNCT_ADD, `FUNCT_SUB: case (funct7)
 		7'b0100000: alu = $signed(a) - $signed(b);
-		7'b0100000: alu = $signed(a) + $signed(b);
+		7'b0000000: alu = $signed(a) + $signed(b);
 		default: alu = 'bx;
 	endcase
 	`FUNCT_AND: alu = a & b;
