@@ -23,14 +23,16 @@
 `define FUNCT_BGE 3'b100
 `define FUNCT_BGEU 3'b101
 
-module riscv32i(
-	input rst,
-	input clk,
-	input [XLEN-1:0] instruction,
-	output reg [XLEN-1:0] read_addr,
+module RISCV32I(
+	input wire rst,
+	input wire clk,
+	input wire [XLEN-1:0] instruction,
 	input wire [XLEN-1:0] read_data,
+	output reg [XLEN-1:0] instr_addr,
+	output reg [XLEN-1:0] read_addr,
 	output reg [XLEN-1:0] write_addr,
-	output reg [XLEN-1:0] write_data
+	output reg [XLEN-1:0] write_data,
+	output reg exception
 );
 
 parameter XLEN=32;
