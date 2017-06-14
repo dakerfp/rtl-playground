@@ -73,24 +73,20 @@ assign imms = {{22{sign}}, instruction[30:25], instruction[11:8], instruction[7]
 assign immb = {{20{sign}}, instruction[7], instruction[30:25], instruction[11:8], 1'd0};
 assign immu = {instruction[31:12], 12'd0};
 assign immj = {{11{sign}},instruction[19:12],instruction[20],instruction[32:21], 1'd0};
+assign uimm = {instruction[19:15]};
 
 
 function conditional_branch;
 input rs1, rs2, funct;
 begin
 	case (funct)
-	`FUNCT_BEQ:
-		conditional_branch = rs1 == rs2;
-	`FUNCT_BNEQ:
-		conditional_branch = rs1 != rs2;
-	`FUNCT_BLT:
-		conditional_branch = $signed(rs1) < $signed(rs2);
-	`FUNCT_BLTU:
-		conditional_branch = rs1 < rs2;
-	`FUNCT_BGE:
-		conditional_branch = $signed(rs1) >= $signed(rs2);
-	`FUNCT_BGEU:
-		conditional_branch = rs1 >= rs2;
+	`FUNCT_BEQ: conditional_branch = rs1 == rs2;
+	`FUNCT_BNEQ: conditional_branch = rs1 != rs2;
+	`FUNCT_BLT: conditional_branch = $signed(rs1) < $signed(rs2);
+	`FUNCT_BLTU: conditional_branch = rs1 < rs2;
+	`FUNCT_BGE: conditional_branch = $signed(rs1) >= $signed(rs2);
+	`FUNCT_BGEU: conditional_branch = rs1 >= rs2;
+	default: conditional_branch = 0;
 	endcase
 end
 endfunction
