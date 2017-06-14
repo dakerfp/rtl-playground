@@ -43,6 +43,7 @@ parameter XLEN=32;
 
 reg [XLEN-1:0] regs [31:0]; // regs[0] == 0
 reg [XLEN-1:0] pc;
+reg [64-1:0] rdcycle;
 
 // INSTRUCTIONS DECODING
 wire [6:0] opcode;
@@ -129,10 +130,17 @@ endfunction
 function add_alu; // TODO: ensure they synthetize to the same module
 input a, b;
 begin
-	add_alu = alu(a, b, 32'dx, `FUNCT_ADD_SUB, 3'd0);
+	add_alu = alu(a, b, 32'dx, `FUNCT_ADD, 3'd0);
 end
 endfunction
 
+always @(posedge clk or posedge rst) begin
+	if (rst) begin
+		rdcycle = 0;
+	end else if (clk) begin
+		rdcycle = rdcycle + 1;
+	end
+end
 
 // Update code for pc
 always @(posedge clk or posedge rst) begin
