@@ -14,14 +14,13 @@ import (
 type OpCode uint32
 type Reg uint32
 type Funct3 uint32
-type Instr func(...string) uint32
 
 const (
 	Funct3Add = Funct3(iota)
 )
 
 const (
-	OpImm    = OpCode(23)
+	OpImm    = OpCode(19)
 	Op       = OpCode(51)
 	OpLui    = OpCode(55)
 	OpStore  = OpCode(35)
