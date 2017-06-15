@@ -1,55 +1,11 @@
-// RV32I Base Instruction Set
-// LUI
-`define OP_LUI    7'b0110111
-// AUIPC
-`define OP_AUIPC  7'b0010111
-// JAL
-`define OP_JAL    7'b1101111
-// JALR
-`define OP_JALR   7'b1100111
-// BEQ, BNE, BLT, BGE, BLTU, BGEU
-`define OP_BRANCH 7'b1100011
-// LB, LH, LW, LBU, LHU
-`define OP_LOAD   7'b0000011
-// SB, SH, SW
-`define OP_STORE  7'b0100011
-// ADDI, SLTI, SLTIU, XORI, ORI, ANDI, SLLI, SRLI, SRAI
-`define OP_IMM    7'b0010011
-// ADD, SUB, SLL, SLT, SLTU, XOR, SRL, SRA, OR, AND
-`define OP        7'b0110011
-// FENCE, FENCE.I
-`define OP_FENCE  7'b0001111
-// ECALL, EBREAK, CSRRW, CSRRS, CSRRC, CSRRWI, CSRRSI, CSRRCI
-`define OP_SYSTEM 7'b1110011
-
-`define FUNCT3_ADD 3'b000
-`define FUNCT3_SUB 3'b000
-`define FUNCT3_SLT 3'b010
-`define FUNCT3_SLTU 3'b011
-`define FUNCT3_XOR 3'b100
-`define FUNCT3_OR  3'b110
-`define FUNCT3_AND 3'b111
-`define FUNCT3_SLL 3'b001
-`define FUNCT3_SRL_SRA 3'b101
-`define FUNCT3_BEQ 3'b000
-`define FUNCT3_BNEQ 3'b001
-`define FUNCT3_BLT 3'b010
-`define FUNCT3_BLTU 3'b011
-`define FUNCT3_BGE 3'b100
-`define FUNCT3_BGEU 3'b101
-
-`define CSR_RDCYCLE 12'd0
-`define CSR_RDCYCLEH 12'd1
-`define CSR_RDTIME 12'd2
-`define CSR_RDTIMEH 12'd3
-`define CSR_RDINSTRET 12'd4
-`define CSR_RDINSTRETH 12'd5
+`include "riscv-isa.v"
 
 module RISCV32I(
 	input wire rst,
 	input wire clk,
 	input wire [XLEN-1:0] instruction,
 	input wire [XLEN-1:0] read_data,
+
 	output reg [XLEN-1:0] instr_fetch_addr,
 	output reg [XLEN-1:0] read_addr,
 	output reg [XLEN-1:0] write_addr,
