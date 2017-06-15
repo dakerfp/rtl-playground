@@ -5,7 +5,6 @@ import (
 	"encoding/binary"
 	"errors"
 	"flag"
-	"fmt"
 	"io"
 	"os"
 	"strconv"
@@ -92,7 +91,7 @@ var OpCodeNames = map[string]OpCode{
 	"addi": OpImm,
 }
 
-func isLabel(token string) bool {
+func islabel(token string) bool {
 	return len(token) > 1 && token[len(token)-1] == ':'
 }
 
@@ -190,16 +189,8 @@ var (
 	outputFileFlag = flag.String("o", "a.out", "output assembled object")
 )
 
-func main() {
-	flag.Parse()
-	args := flag.Args()
-
-	f, err := os.Open(args[0])
-	if err != nil {
-		panic(err)
-	}
-	sr := bufio.NewReader(f)
-
+func assemble(w io.Writer, r io.Reader) error {
+	sr := bufio.NewReader(r)
 	lineno := 0
 	instrno := 0
 	labels := make(map[string]int)
@@ -209,7 +200,7 @@ func main() {
 		if err == io.EOF {
 			break
 		} else if err != nil {
-			panic(err)
+			return err
 		}
 		lineno++
 		line = line[0:strings.IndexAny(line, "#\n")]
@@ -221,10 +212,10 @@ func main() {
 		if len(tokens) == 0 {
 			continue
 		}
-		if label := tokens[0]; isLabel(label) {
+		if label := tokens[0]; islabel(label) {
 			tokens = tokens[1:]
 			if _, ok := labels[label]; ok {
-				panic("repeated label: " + label)
+				return errors.New("repeated label: " + label)
 			}
 			labels[label] = instrno
 		}
@@ -233,29 +224,43 @@ func main() {
 		if len(tokens) == 0 || tokens[0] == "" {
 			continue
 		}
-		cmd, err := parseCommand(tokens)
+		cmd, err := parseCommand(tokens) // does not support large pseudo instructions
 		if err != nil {
-			panic(err)
+			return err
 		}
-		segments[".text"] = append(segments[".text"], cmd)
+		segments[".text"] = append(segments[".text"], cmd) // XXX: ignoring segments
 		instrno++
 	}
 
-	of, err := os.OpenFile(*outputFileFlag, os.O_CREATE|os.O_WRONLY, 0755)
+	for _, segment := range segments {
+		for _, instr := range segment {
+			err := binary.Write(w, binary.LittleEndian, instr)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+func main() {
+	flag.Parse()
+	args := flag.Args()
+
+	r, err := os.Open(args[0])
 	if err != nil {
 		panic(err)
 	}
-	defer of.Close()
+	defer r.Close()
 
-	for name, segment := range segments {
-		for _, instr := range segment {
-			err := binary.Write(of, binary.LittleEndian, instr)
-			if err != nil {
-				panic(err)
-			}
-		}
-		fmt.Println(name, *outputFileFlag, segment)
+	w, err := os.OpenFile(*outputFileFlag, os.O_CREATE|os.O_WRONLY, 0755)
+	if err != nil {
+		panic(err)
 	}
+	defer w.Close()
 
-	defer f.Close()
+	if err := assemble(w, r); err != nil {
+		panic(err)
+	}
 }
