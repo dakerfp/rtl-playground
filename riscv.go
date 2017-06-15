@@ -86,18 +86,17 @@ func islabel(token string) bool {
 	return len(token) > 1 && token[len(token)-1] == ':'
 }
 
-func bitmask(from, to uint32) uint32 {
+func bitmask(v, from, to uint32) uint32 {
 	mask := uint32(1 << from)
 	for i := from + 1; i <= to; i++ {
 		mask |= 1 << i
 	}
-	return mask
+	return mask & v
 }
 
 func emplace(bits, v, from, to uint32) (uint32, error) {
 	shiftv := v << from
-	mask := bitmask(from, to)
-	v = shiftv & mask
+	v = bitmask(shiftv, from, to)
 	if v != shiftv {
 		return bits, ErrValueDontFitImmediate
 	}
@@ -201,7 +200,7 @@ func assemble(w io.Writer, r io.Reader) error {
 		tokens := strings.Split(line, " ")
 
 		// check if it is a section
-		if len(tokens) == 2 && tokens[0] == "section" {
+		if len(tokens) == 2 && tokens[0] == ".section" {
 			currsegment = tokens[1]
 			continue
 		}

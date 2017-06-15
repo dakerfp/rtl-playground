@@ -1,19 +1,21 @@
 package main
 
 import (
+	"os"
 	"testing"
 )
 
 func TestBitmask(t *testing.T) {
-	if m := bitmask(0, 31); m != 0xFFFFFFFF {
+	ones := uint32(0xFFFFFFFF)
+	if m := bitmask(ones, 0, 31); m != 0xFFFFFFFF {
 		t.Fatal(m, 0xFFFFFFFF)
 	}
 
-	if m := bitmask(0, 15); m != 0xFFFF {
+	if m := bitmask(ones, 0, 15); m != 0xFFFF {
 		t.Fatal(m, 0xFFFF)
 	}
 
-	if m := bitmask(16, 31); m != 0xFFFF0000 {
+	if m := bitmask(ones, 16, 31); m != 0xFFFF0000 {
 		t.Fatal(m, 0xFFFF0000)
 	}
 }
