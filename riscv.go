@@ -42,14 +42,6 @@ var (
 	ErrInvalidNumeral          = errors.New("invalid number literal")
 )
 
-func IImmu(imm uint32) (uint32, error) {
-	if imm >= (1 << 12) {
-		return 0, ErrValueDontFitImmediate
-	}
-	v := imm << 20
-	return v, nil
-}
-
 var RegNames = map[string]Reg{
 	"x0": Reg(0), "zero": Reg(0),
 	"x1": Reg(1), "ra": Reg(1),
@@ -211,6 +203,7 @@ func assemble(w io.Writer, r io.Reader) error {
 		// check if it is a segment
 		if len(tokens) == 2 && tokens[0] == "segment" {
 			currsegment = tokens[1]
+			continue
 		}
 
 		// read label, if there is any
