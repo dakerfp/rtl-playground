@@ -1,7 +1,5 @@
 
 _start:
-	li t1, 40
-	li t2, 2
-	add t3, t1, t2
-	sw t3
-
+	li t1, 40 # load 40
+	add t3, t1, t2 # add 40 + 2
+	sw t3 # write 42 into out
