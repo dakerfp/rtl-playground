@@ -185,7 +185,7 @@ func parseCommand(tokens []string) (uint32, error) {
 }
 
 var (
-	outputFileFlag = flag.String("o", "a.out", "output assembled object")
+	outputFileFlag = flag.String("o", "a.bin", "output assembled object")
 )
 
 func assemble(w io.Writer, r io.Reader) error {
