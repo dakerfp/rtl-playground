@@ -194,6 +194,7 @@ func assemble(w io.Writer, r io.Reader) error {
 	instrno := 0
 	labels := make(map[string]int)
 	segments := make(map[string][]uint32)
+	currsegment := ""
 	for {
 		line, err := sr.ReadString('\n')
 		if err == io.EOF {
@@ -206,6 +207,11 @@ func assemble(w io.Writer, r io.Reader) error {
 		line = strings.TrimSpace(line)
 		line = strings.Replace(line, ",", "", -1) // XXX
 		tokens := strings.Split(line, " ")
+
+		// check if it is a segment
+		if len(tokens) == 2 && tokens[0] == "segment" {
+			currsegment = tokens[1]
+		}
 
 		// read label, if there is any
 		if len(tokens) == 0 {
@@ -227,7 +233,7 @@ func assemble(w io.Writer, r io.Reader) error {
 		if err != nil {
 			return err
 		}
-		segments[".text"] = append(segments[".text"], cmd) // XXX: ignoring segments
+		segments[currsegment] = append(segments[currsegment], cmd)
 		instrno++
 	}
 
