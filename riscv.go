@@ -176,22 +176,30 @@ func parseCommand(tokens []string) (uint32, error) {
 }
 
 var (
-	outputFileFlag = flag.String("o", "a.bin", "output assembled object")
+	outputFileFlag = flag.String("o", "a.bin", "output Parsed object")
 )
 
-func assemble(w io.Writer, r io.Reader) error {
+type Section []uint32
+type Object struct {
+	Labels   map[string]int
+	Sections map[string]Section
+}
+
+func Parse(r io.Reader) (*Object, error) {
 	sr := bufio.NewReader(r)
 	lineno := 0
 	instrno := 0
-	labels := make(map[string]int)
-	segments := make(map[string][]uint32)
-	currsegment := ".text"
+	obj := &Object{
+		make(map[string]int),
+		make(map[string]Section),
+	}
+	currsection := ".text"
 	for {
 		line, err := sr.ReadString('\n')
 		if err == io.EOF {
 			break
 		} else if err != nil {
-			return err
+			return nil, err
 		}
 		lineno++
 		line = line[0:strings.IndexAny(line, "#\n")]
@@ -201,7 +209,7 @@ func assemble(w io.Writer, r io.Reader) error {
 
 		// check if it is a section
 		if len(tokens) == 2 && tokens[0] == ".section" {
-			currsegment = tokens[1]
+			currsection = tokens[1]
 			continue
 		}
 
@@ -211,10 +219,10 @@ func assemble(w io.Writer, r io.Reader) error {
 		}
 		if label := tokens[0]; islabel(label) {
 			tokens = tokens[1:]
-			if _, ok := labels[label]; ok {
-				return errors.New("repeated label: " + label)
+			if _, ok := obj.Labels[label]; ok {
+				return nil, errors.New("repeated label: " + label)
 			}
-			labels[label] = instrno
+			obj.Labels[label] = instrno
 		}
 
 		// read instruction
@@ -223,21 +231,24 @@ func assemble(w io.Writer, r io.Reader) error {
 		}
 		cmd, err := parseCommand(tokens) // does not support large pseudo instructions
 		if err != nil {
-			return err
+			return nil, err
 		}
-		segments[currsegment] = append(segments[currsegment], cmd)
+		obj.Sections[currsection] = append(obj.Sections[currsection], cmd)
 		instrno++
 	}
 
-	for _, segment := range segments {
-		for _, instr := range segment {
+	return obj, nil
+}
+
+func AssembleBinary(w io.Writer, o *Object) error {
+	for _, section := range o.Sections {
+		for _, instr := range section {
 			err := binary.Write(w, binary.LittleEndian, instr)
 			if err != nil {
 				return err
 			}
 		}
 	}
-
 	return nil
 }
 
@@ -251,13 +262,18 @@ func main() {
 	}
 	defer r.Close()
 
+	obj, err := Parse(r)
+	if err != nil {
+		panic(err)
+	}
+
 	w, err := os.OpenFile(*outputFileFlag, os.O_CREATE|os.O_WRONLY, 0755)
 	if err != nil {
 		panic(err)
 	}
 	defer w.Close()
 
-	if err := assemble(w, r); err != nil {
+	if err := AssembleBinary(w, obj); err != nil {
 		panic(err)
 	}
 }
