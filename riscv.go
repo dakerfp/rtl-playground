@@ -186,7 +186,7 @@ func assemble(w io.Writer, r io.Reader) error {
 	instrno := 0
 	labels := make(map[string]int)
 	segments := make(map[string][]uint32)
-	currsegment := ""
+	currsegment := ".text"
 	for {
 		line, err := sr.ReadString('\n')
 		if err == io.EOF {
@@ -200,8 +200,8 @@ func assemble(w io.Writer, r io.Reader) error {
 		line = strings.Replace(line, ",", "", -1) // XXX
 		tokens := strings.Split(line, " ")
 
-		// check if it is a segment
-		if len(tokens) == 2 && tokens[0] == "segment" {
+		// check if it is a section
+		if len(tokens) == 2 && tokens[0] == "section" {
 			currsegment = tokens[1]
 			continue
 		}
