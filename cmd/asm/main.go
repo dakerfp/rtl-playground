@@ -19,13 +19,18 @@ func main() {
 	flag.Parse()
 	args := flag.Args()
 
-	if len(args) == 0 {
-		panic("no input file given")
-	}
-
-	r, err := os.Open(args[0])
-	if err != nil {
-		panic(err)
+	var r io.ReadCloser
+	switch len(args) {
+	case 1:
+		f, err := os.Open(args[0])
+		if err != nil {
+			panic(err)
+		}
+		r = f
+	case 0:
+		r = os.Stdin
+	default:
+		panic("too many files")
 	}
 	defer r.Close()
 
