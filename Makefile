@@ -2,10 +2,12 @@
 VC=iverilog
 TMP_OUTPUT=/tmp/vt.txt
 
-all: test bin/riscv bin/asm
+all: test bin/*
 
 test: mem.tb alu.tb gotest
 	@rm -rf *.tb
+
+samples: bin/li.bin bin/add.bin bin/fib.bin
 
 bin/riscv: riscv_tb.v
 	@$(VC) $^ -o $@
@@ -18,6 +20,9 @@ gotest:
 
 bin:
 	mkdir -p bin
+
+bin/%.bin: examples/%.asm
+	bin/asm -o $@ $^
 
 %.tb: %_test.v
 	@$(VC) $^ -o $@
