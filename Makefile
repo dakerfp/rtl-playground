@@ -21,7 +21,11 @@ test: gotest testsamples testtb
 gotest:
 	go test ./...
 
-testtb: mem.tb alu.tb riscv/if.tb riscv/id.tb riscv/ex.tb riscv/id_if.tb
+testtb: testunittb testinttb
+
+testunittb: mem.tb alu.tb riscv/if.tb riscv/id.tb riscv/ex.tb
+
+testinttb: riscv/id_if.tb riscv/id_if.tb riscv/id_if_ex.tb
 
 %.tb: %_tb.v
 	@$(VC) $^ -o $@

@@ -4,8 +4,8 @@
 module riscv_id(
 	input wire rst,
 	input wire clk,
-	input [XLEN-1:0] instruction,
-	input [XLEN-1:0] pc,
+	input wire [XLEN-1:0] instruction,
+	input wire [XLEN-1:0] pc,
 
 	output reg [REGA-1:0] rd,
 	output reg [XLEN-1:0] a,
