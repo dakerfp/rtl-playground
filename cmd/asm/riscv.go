@@ -112,6 +112,23 @@ func AssembleText(w io.Writer, o *Object) error {
 
 func parseCommand(tokens []string) (uint32, error) {
 	switch tokens[0] {
+	case "addi":
+		if len(tokens) != 4 {
+			return 0, ErrWrongInstrunctionFormat
+		}
+		rd, ok := RegNames[tokens[1]]
+		if !ok {
+			return 0, ErrInvalidRegister
+		}
+		rs, ok := RegNames[tokens[2]]
+		if !ok {
+			return 0, ErrInvalidRegister
+		}
+		immi, err := strconv.ParseUint(tokens[3], 10, 12)
+		if err != nil {
+			return 0, ErrInvalidNumeral
+		}
+		return iinstruction(OpImm, rd, Funct3Add, rs, uint32(immi))
 	case "li":
 		if len(tokens) != 3 {
 			return 0, ErrWrongInstrunctionFormat

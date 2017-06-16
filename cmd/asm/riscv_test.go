@@ -1,9 +1,18 @@
 package main
 
 import (
+	"io/ioutil"
+	"os"
+	"path"
 	"strings"
 	"testing"
 )
+
+func check(t *testing.T, err error) {
+	if err != nil {
+		t.Fatal(err)
+	}
+}
 
 func TestBitmask(t *testing.T) {
 	ones := uint32(0xFFFFFFFF)
@@ -67,9 +76,7 @@ func TestConcat(t *testing.T) {
 		bitslice{0xD, 4},
 		bitslice{0xE, 4},
 	)
-	if err != nil {
-		t.Fatal(err)
-	}
+	check(t, err)
 	if v != 0xBADC0DE {
 		t.Fatal(v)
 	}
@@ -81,9 +88,7 @@ func TestConcat(t *testing.T) {
 	immi := bitslice{42, 12}
 
 	v, err = concat(immi, rs, funct3, rd, opcode)
-	if err != nil {
-		t.Fatal(err)
-	}
+	check(t, err)
 	if v != 44040851 { // li t0, 42
 		t.Fatal(v)
 	}
@@ -132,5 +137,22 @@ load:
 
 	if li != 44040851 {
 		t.Fatal(text)
+	}
+}
+
+func TestSamples(t *testing.T) {
+	dir, err := ioutil.ReadDir("samples")
+	check(t, err)
+
+	for _, fi := range dir {
+		func(fn string) {
+			f, err := os.Open(fn)
+			check(t, err)
+			defer f.Close()
+
+			obj, err := Parse(f)
+			check(t, err)
+			check(t, AssembleBinary(ioutil.Discard, obj))
+		}(path.Join("samples", fi.Name()))
 	}
 }
