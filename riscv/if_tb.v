@@ -13,7 +13,8 @@ riscv_if rv_if (
 	pc
 );
 
-initial begin
+task test_bubble;
+begin
 	bubble = 0;
 	reset; assert(pc == 0, "reset 1");
 	tick; assert(pc == 4, "clk 1");
@@ -23,6 +24,11 @@ initial begin
 	bubble = 1; tick; assert(pc == 12, "bubble 2");
 	bubble = 0; tick; assert(pc == 16, "clk 5");
 	reset; assert(pc == 0, "reset 2");
+end
+endtask
+
+initial begin
+	test_bubble;
 	success;
 end
 
