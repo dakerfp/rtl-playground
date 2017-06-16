@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"flag"
+	"fmt"
 	"io"
 	"os"
 	"strconv"
@@ -237,6 +238,8 @@ func Parse(r io.Reader) (*Object, error) {
 	return obj, nil
 }
 
+type Assembler func(w io.Writer, o *Object) error
+
 func AssembleBinary(w io.Writer, o *Object) error {
 	for _, section := range o.Sections {
 		for _, instr := range section {
@@ -249,9 +252,23 @@ func AssembleBinary(w io.Writer, o *Object) error {
 	return nil
 }
 
+func AssembleText(w io.Writer, o *Object) error {
+	for _, section := range o.Sections {
+		for _, instr := range section {
+			_, err := fmt.Fprintln(w, uint32(instr))
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
 var (
 	outputFileFlag = flag.String("o", "a.bin", "output Parsed object")
 	dumpFlag       = flag.Bool("d", false, "output hex dump format instead of binary")
+	stdoutFlag     = flag.Bool("stdout", false, "output into stdout")
+	txtFlag        = flag.Bool("txt", false, "output txt")
 	zeroPadFlag    = flag.Int("pad", -1, "zero padding size")
 )
 
@@ -275,22 +292,36 @@ func main() {
 	}
 
 	var w io.WriteCloser
-	if *dumpFlag {
-		w = hex.Dumper(os.Stdout)
-	} else {
+	switch {
+	case *stdoutFlag:
+		w = os.Stdout
+	case *outputFileFlag != "":
 		f, err := os.OpenFile(*outputFileFlag, os.O_CREATE|os.O_WRONLY, 0755)
 		if err != nil {
 			panic(err)
 		}
+		defer f.Close()
 		w = f
+	default:
+		panic("no output set")
 	}
 
 	if *zeroPadFlag > 0 {
 		w = &ZeroPad{w, *zeroPadFlag}
 	}
-	defer w.Close()
 
-	if err := AssembleBinary(w, obj); err != nil {
+	if *dumpFlag {
+		w = hex.Dumper(w)
+		defer w.Close()
+	}
+
+	var assemble Assembler
+	if *txtFlag {
+		assemble = AssembleText
+	} else {
+		assemble = AssembleBinary
+	}
+	if err := assemble(w, obj); err != nil {
 		panic(err)
 	}
 }

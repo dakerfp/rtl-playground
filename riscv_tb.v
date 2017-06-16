@@ -35,13 +35,28 @@ always @(posedge clk) begin
 			cachel1[write_addr[7:0]] <= write_data;
 end
 
-initial $readmemb("a.bin", cachel1);
+task tick;
+begin
+	#1 clk = 1;
+	#1 clk = 0;
+end
+endtask
+
+
+
+initial $readmemh("rom.txt", cachel1);
 initial begin
 	rst = 1;
 	clk = 0;
-	#1
-	rst = 0;
-	clk = 1;
+	tick;
+	tick;
+	tick;
+	tick;
+	tick;
+	tick;
+	tick;
+	tick;
+	$finish;
 end
 
 endmodule

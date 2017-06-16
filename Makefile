@@ -4,10 +4,8 @@ TMP_OUTPUT=/tmp/vt.txt
 
 all: bin/asm bin/riscv
 
-test: mem.tb alu.tb gotest
+test: mem.tb alu.tb gotest testsamples
 	@rm -rf *.tb
-
-samples: bin/li.bin # bin/add.bin bin/fib.bin
 
 bin/riscv: riscv_tb.v
 	@$(VC) $^ -o $@
@@ -27,6 +25,16 @@ bin/%.bin: examples/%.asm
 %.tb: %_test.v
 	@$(VC) $^ -o $@
 	@./$@ > $TMP_OUTPUT && echo "[" $*_test "]: OK" || echo "[" $*_test "]: FAIL" && cat $TMP_OUTPUT
+	@rm $@
+
+testsamples: li.ts
+
+%.ts: examples/%.asm
+	@bin/asm -txt -o ./rom.txt $^
+	@iverilog -o $@ memread_tb.v
+	./$@
+	@rm -rf ./rom.txt
+	@rm -rf $@
 
 clean:
 	rm -rf *.tb
