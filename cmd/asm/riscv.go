@@ -120,64 +120,22 @@ func parseCommand(tokens []string) (uint32, error) {
 		if !ok {
 			return 0, ErrInvalidRegister
 		}
-		imm, err := strconv.ParseUint(tokens[2], 10, 12)
+		immi, err := strconv.ParseUint(tokens[2], 10, 12)
 		if err != nil {
 			return 0, ErrInvalidNumeral
 		}
-		return iinstruction(OpImm, rd, Funct3Add, 0, uint32(imm))
+		return iinstruction(OpImm, rd, Funct3Add, 0, uint32(immi))
 	default:
 		return 0, ErrUnknownInstruction
 	}
 }
 
-func rinstruction(opcode, rd, funct3, rs1, rs2, funct7 uint32) (uint32, error) {
-	instr, err := emplace(0, opcode, 0, 6)
-	if err != nil {
-		return 0, err
-	}
-	instr, err = emplace(instr, rd, 7, 11)
-	if err != nil {
-		return 0, err
-	}
-	instr, err = emplace(instr, funct3, 12, 14)
-	if err != nil {
-		return 0, err
-	}
-	instr, err = emplace(instr, rs1, 15, 19)
-	if err != nil {
-		return 0, err
-	}
-	instr, err = emplace(instr, rs2, 20, 24)
-	if err != nil {
-		return 0, err
-	}
-	instr, err = emplace(instr, funct7, 25, 31)
-	if err != nil {
-		return 0, err
-	}
-	return instr, nil
-}
-
-func iinstruction(opcode OpCode, rd Reg, funct3 Funct3, rs1 Reg, immu uint32) (uint32, error) {
-	instr, err := emplace(0, uint32(opcode), 0, 6)
-	if err != nil {
-		return 0, err
-	}
-	instr, err = emplace(instr, uint32(rd), 7, 11)
-	if err != nil {
-		return 0, err
-	}
-	instr, err = emplace(instr, uint32(funct3), 12, 14)
-	if err != nil {
-		return 0, err
-	}
-	instr, err = emplace(instr, uint32(rs1), 15, 19)
-	if err != nil {
-		return 0, err
-	}
-	instr, err = emplace(instr, immu, 20, 31)
-	if err != nil {
-		return 0, err
-	}
-	return instr, nil
+func iinstruction(opcode OpCode, rd Reg, funct3 Funct3, rs1 Reg, immi uint32) (uint32, error) {
+	return concat(
+		bitslice{42, 12},
+		bitslice{uint32(rs1), 5},
+		bitslice{uint32(funct3), 3},
+		bitslice{uint32(rd), 5},
+		bitslice{uint32(opcode), 7},
+	)
 }
