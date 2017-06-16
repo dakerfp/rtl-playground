@@ -41,6 +41,7 @@ reg invertb;
 
 wire [31:0] result;
 wire [4:0] rd;
+wire memfetch;
 
 riscv_ex rv_ex (
 	rst,
@@ -54,7 +55,8 @@ riscv_ex rv_ex (
 	invertb,
 
 	result,
-	rd
+	rd,
+	memfetch
 );
 
 always @(posedge clk) begin

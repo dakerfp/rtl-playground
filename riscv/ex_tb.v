@@ -13,6 +13,7 @@ reg invertb;
 
 wire [31:0] result;
 wire [4:0] rd;
+wire memfetch;
 
 riscv_ex rv_ex (
 	rst,
@@ -26,30 +27,38 @@ riscv_ex rv_ex (
 	invertb,
 
 	result,
-	rd
+	rd,
+	memfetch
 );
 
 task test_alu;
 begin
 	// XXX: test all operations
-	reset; assert(result == 0, "reset 1");
+	reset;
+	assert(result == 0, "reset 1");
+	assert(~memfetch, "~memfetch");
 
 	rdi = 4; a = 40; b = 2; shamt = 0; funct3 = `FUNCT3_ADD; invertb = 0;
 	tick;
 	assert(result == 42, "40 + 2 == 42");
 	assert(rd == 4, "rd == 4");
+	assert(~memfetch, "~memfetch");
 
 	rdi = 2; a = 40; b = -5; shamt = 0; funct3 = `FUNCT3_ADD; invertb = 0;
 	tick;
 	assert(result == 35, "40 - 5 == 35");
 	assert(rd == 2, "rd == 2");
+	assert(~memfetch, "~memfetch");
 
 	rdi = 7; a = 3; b = 0; shamt = 2; funct3 = `FUNCT3_SLL; invertb = 0;
 	tick;
 	assert(result == 3 << 2, "40 - 5 == 35");
 	assert(rd == 7, "rd == 7");
+	assert(~memfetch, "~memfetch");
 
-	reset; assert(result == 0, "reset 2");
+	reset;
+	assert(result == 0, "reset 2");
+	assert(~memfetch, "~memfetch");
 end
 endtask
 

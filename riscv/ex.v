@@ -13,7 +13,8 @@ module riscv_ex(
 	input wire invertb,
 
 	output reg [XLEN-1:0] result,
-	output reg [REGA-1:0] rd
+	output reg [REGA-1:0] rd,
+	output reg memfetch
 );
 
 parameter XLEN = 32;
@@ -44,6 +45,13 @@ always @(posedge clk or posedge rst) begin
 		`FUNCT3_OR: result <= a | b;
 		`FUNCT3_AND: result <= a & b;
 		endcase
+	end
+end
+
+// Memory fetch
+always @(posedge clk or posedge rst) begin
+	if (rst) begin
+		memfetch <= 0;
 	end
 end
 
