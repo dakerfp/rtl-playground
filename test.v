@@ -27,7 +27,7 @@ task assert;
 input cond;
 input [127:0] msg;
 begin
-	if (~cond) begin
+	if (cond !== 1) begin
 		$display("[ FAIL ] %s", msg);
 		$finish;
 	end
