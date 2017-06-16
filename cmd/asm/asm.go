@@ -114,7 +114,7 @@ func parseCommand(tokens []string) (uint32, error) {
 			return 0, ErrWrongInstrunctionFormat
 		}
 		return assemblei(OpImm, Funct3Add, "zero", "zero", "0")
-	case "mov":
+	case "mv":
 		if len(tokens) != 3 {
 			return 0, ErrWrongInstrunctionFormat
 		}
