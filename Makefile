@@ -16,7 +16,6 @@ bin:
 bin/%.bin: examples/%.asm
 	bin/asm -o $@ $^
 
-
 test: gotest testsamples testtb
 
 gotest:
