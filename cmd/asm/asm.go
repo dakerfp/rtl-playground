@@ -122,7 +122,7 @@ func assemblei(opcode OpCode, funct3 Funct3, args ...string) (uint32, error) {
 	if !ok {
 		return 0, ErrInvalidRegister
 	}
-	rs, ok := RegNames[args[1]]
+	rs1, ok := RegNames[args[1]]
 	if !ok {
 		return 0, ErrInvalidRegister
 	}
@@ -130,12 +130,12 @@ func assemblei(opcode OpCode, funct3 Funct3, args ...string) (uint32, error) {
 	if err != nil {
 		return 0, ErrInvalidNumeral
 	}
-	return iinstruction(OpImm, rd, Funct3Add, rs, uint32(immi))
+	return iinstruction(OpImm, rd, Funct3Add, rs1, uint32(immi))
 }
 
 func iinstruction(opcode OpCode, rd Reg, funct3 Funct3, rs1 Reg, immi uint32) (uint32, error) {
 	return concat(
-		bitslice{42, 12},
+		bitslice{immi, 12},
 		bitslice{uint32(rs1), 5},
 		bitslice{uint32(funct3), 3},
 		bitslice{uint32(rd), 5},

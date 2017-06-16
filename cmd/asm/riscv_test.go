@@ -131,6 +131,10 @@ load:
 		t.Fatal("wrong register: ", reg)
 	}
 
+	if reg := bitmask(li, 12, 20) >> 12; reg != uint32(RegNames["zero"]) {
+		t.Fatal("wrong register: ", reg)
+	}
+
 	if imm := bitmask(li, 20, 32) >> 20; imm != uint32(42) {
 		t.Fatal("wrong immm: ", imm)
 	}
