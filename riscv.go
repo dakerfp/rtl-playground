@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"encoding/binary"
+	"encoding/hex"
 	"errors"
 	"flag"
 	"io"
@@ -175,10 +176,6 @@ func parseCommand(tokens []string) (uint32, error) {
 	}
 }
 
-var (
-	outputFileFlag = flag.String("o", "a.bin", "output Parsed object")
-)
-
 type Section []uint32
 type Object struct {
 	Labels   map[string]int
@@ -252,6 +249,12 @@ func AssembleBinary(w io.Writer, o *Object) error {
 	return nil
 }
 
+var (
+	outputFileFlag = flag.String("o", "a.bin", "output Parsed object")
+	dumpFlag       = flag.Bool("d", false, "output hex dump format instead of binary")
+	zeroPadFlag    = flag.Int("pad", -1, "zero padding size")
+)
+
 func main() {
 	flag.Parse()
 	args := flag.Args()
@@ -267,9 +270,19 @@ func main() {
 		panic(err)
 	}
 
-	w, err := os.OpenFile(*outputFileFlag, os.O_CREATE|os.O_WRONLY, 0755)
-	if err != nil {
-		panic(err)
+	var w io.WriteCloser
+	if *dumpFlag {
+		w = hex.Dumper(os.Stdout)
+	} else {
+		f, err := os.OpenFile(*outputFileFlag, os.O_CREATE|os.O_WRONLY, 0755)
+		if err != nil {
+			panic(err)
+		}
+		w = f
+	}
+
+	if *zeroPadFlag > 0 {
+		w = &ZeroPad{w, *zeroPadFlag}
 	}
 	defer w.Close()
 

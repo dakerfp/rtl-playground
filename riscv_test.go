@@ -57,7 +57,7 @@ func TestEmplace(t *testing.T) {
 	}
 }
 
-func TestAssembler(t *testing.T) {
+func TestParser(t *testing.T) {
 	obj, err := Parse(strings.NewReader(`
 .section .text # section text, should be default
 load:
