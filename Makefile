@@ -1,12 +1,23 @@
 
 VC=iverilog
-TMP_OUTPUT=/tmp/verilog_test.txt
+TMP_OUTPUT=/tmp/vt.txt
 
-cpu_sim: cpu_sim.v
+all: test bin/riscv bin/asm
+
+test: mem.tb alu.tb gotest
+	@rm -rf *.tb
+
+bin/riscv: riscv_tb.v
 	@$(VC) $^ -o $@
 
-test: mem.tb alu.tb cpu.tb
-	@rm -rf *.tb
+bin/asm: bin
+	go build -o $@ ./cmd/asm
+
+gotest:
+	go test ./...
+
+bin:
+	mkdir -p bin
 
 %.tb: %_test.v
 	@$(VC) $^ -o $@
@@ -14,3 +25,4 @@ test: mem.tb alu.tb cpu.tb
 
 clean:
 	rm -rf *.tb
+	rm bin/asm
