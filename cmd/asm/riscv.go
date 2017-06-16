@@ -17,11 +17,8 @@ var (
 	ErrInvalidNumeral          = errors.New("invalid number literal")
 )
 
-func islabel(token string) bool {
-	return len(token) > 1 && token[len(token)-1] == ':'
-}
-
 type Section []uint32
+
 type Object struct {
 	Labels   map[string]int
 	Sections map[string]Section
@@ -144,4 +141,8 @@ func iinstruction(opcode OpCode, rd Reg, funct3 Funct3, rs1 Reg, immi uint32) (u
 		bitslice{uint32(rd), 5},
 		bitslice{uint32(opcode), 7},
 	)
+}
+
+func islabel(token string) bool {
+	return len(token) > 1 && token[len(token)-1] == ':'
 }
