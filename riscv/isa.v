@@ -22,20 +22,22 @@
 // ECALL, EBREAK, CSRRW, CSRRS, CSRRC, CSRRWI, CSRRSI, CSRRCI
 `define OP_SYSTEM 7'b1110011
 
-`define FUNCT3_ADD 3'b000
-`define FUNCT3_SUB 3'b000
-`define FUNCT3_SLT 3'b010
-`define FUNCT3_SLTU 3'b011
-`define FUNCT3_XOR 3'b100
-`define FUNCT3_OR  3'b110
-`define FUNCT3_AND 3'b111
-`define FUNCT3_SLL 3'b001
+
+// ALU funct3
+`define FUNCT3_ADD     3'b000
+`define FUNCT3_SLL     3'b001
+`define FUNCT3_SLT     3'b010
+`define FUNCT3_SLTU    3'b011
+`define FUNCT3_XOR     3'b100
 `define FUNCT3_SRL_SRA 3'b101
-`define FUNCT3_BEQ 3'b000
+`define FUNCT3_OR      3'b110
+`define FUNCT3_AND     3'b111
+
+`define FUNCT3_BEQ  3'b000
 `define FUNCT3_BNEQ 3'b001
-`define FUNCT3_BLT 3'b010
+`define FUNCT3_BLT  3'b010
 `define FUNCT3_BLTU 3'b011
-`define FUNCT3_BGE 3'b100
+`define FUNCT3_BGE  3'b100
 `define FUNCT3_BGEU 3'b101
 
 `define CSR_RDCYCLE 12'd0
