@@ -259,6 +259,10 @@ func main() {
 	flag.Parse()
 	args := flag.Args()
 
+	if len(args) == 0 {
+		panic("no input file given")
+	}
+
 	r, err := os.Open(args[0])
 	if err != nil {
 		panic(err)
