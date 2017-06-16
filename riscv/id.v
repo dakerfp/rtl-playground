@@ -59,44 +59,37 @@ end
 
 always @(posedge clk or posedge rst) begin
 	if (rst)
-		a <= 32'dx;
+		a <= 0;
 	else case (opcode)
 	`OP_LUI:
 		a <= immu;
-	`OP_JAL,
-	`OP_AUIPC,
-	`OP_JALR:
+	`OP_JAL, `OP_AUIPC, `OP_JALR:
 		a <= pc;
-	`OP,
-	`OP_IMM,
-	`OP_LOAD,
-	`OP_STORE:
+	`OP, `OP_IMM, `OP_LOAD, `OP_STORE:
 		a <= regs[rs1];
 	default:
-		a <= 32'dx;
+		a <= 0;
 	endcase
 end
 
 always @(posedge clk or posedge rst) begin
 	if (rst)
-		b <= 32'dx;
+		b <= 0;
 	else case (opcode)
 	`OP_LUI:
 		b <= 0;
 	`OP_AUIPC:
 		b <= immu;
-	`OP_JAL,
-	`OP_JALR:
+	`OP_JAL, `OP_JALR:
 		b <= 4;
 	`OP:
 		b <= regs[rs2];
-	`OP_IMM,
-	`OP_LOAD:
+	`OP_LOAD, `OP_IMM:
 		b <= immi;
 	`OP_STORE:
 		b <= imms;
 	default:
-		b <= 32'dx;
+		b <= 0;
 	endcase
 end
 
