@@ -94,6 +94,21 @@ func parseCommand(tokens []string) (uint32, error) {
 	switch tokens[0] {
 	case "addi":
 		return assemblei(OpImm, Funct3Add, tokens[1:]...)
+	case "slli":
+		return assemblei(OpImm, Funct3Sll, tokens[1:]...)
+	case "slti":
+		return assemblei(OpImm, Funct3Slt, tokens[1:]...)
+	case "sltiu":
+		return assemblei(OpImm, Funct3Sltu, tokens[1:]...)
+	case "xori":
+		return assemblei(OpImm, Funct3Xor, tokens[1:]...)
+	case "srli", "srai": // TODO
+		return assemblei(OpImm, Funct3SrlSra, tokens[1:]...)
+	case "ori":
+		return assemblei(OpImm, Funct3Or, tokens[1:]...)
+	case "andi":
+		return assemblei(OpImm, Funct3Or, tokens[1:]...)
+	// pseudo functions
 	case "nop":
 		if len(tokens) != 1 {
 			return 0, ErrWrongInstrunctionFormat

@@ -5,7 +5,14 @@ type Reg uint32
 type Funct3 uint32
 
 const (
-	Funct3Add = Funct3(iota)
+	Funct3Add    = Funct3(0)
+	Funct3Sll    = Funct3(1)
+	Funct3Slt    = Funct3(2)
+	Funct3Sltu   = Funct3(3)
+	Funct3Xor    = Funct3(4)
+	Funct3SrlSra = Funct3(5)
+	Funct3Or     = Funct3(6)
+	Funct3And    = Funct3(7)
 )
 
 const (
