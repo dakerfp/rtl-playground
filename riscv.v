@@ -68,33 +68,6 @@ begin
 end
 endfunction
 
-function alu;
-input a, b, shamt, funct3, funct7;
-begin
-	case (funct3)
-	`FUNCT3_SLT: alu = $signed(a) < $signed(b);
-	`FUNCT3_SLTU: alu = a < b;
-	`FUNCT3_ADD, `FUNCT3_SUB: case (funct7)
-		7'b0100000: alu = $signed(a) - $signed(b);
-		7'b0000000: alu = $signed(a) + $signed(b);
-		default: alu = 'bx;
-	endcase
-	`FUNCT3_AND: alu = a & b;
-	`FUNCT3_OR: alu = a | b;
-	`FUNCT3_XOR: alu = a ^ b;
-	`FUNCT3_SLL: case(funct7)
-		7'b0000000: alu = a << shamt;
-		default: alu = 'bx;
-	endcase
-	`FUNCT3_SRL_SRA: case(funct7)
-		7'b0000000: alu = a >> shamt;
-		7'b0100000: alu = $signed(a) >>> shamt;
-		default: alu = 'bx;
-	endcase
-	default: alu = 'bx;
-	endcase
-end
-endfunction
 
 function add_alu; // TODO: ensure they synthetize to the same module
 input a, b;
