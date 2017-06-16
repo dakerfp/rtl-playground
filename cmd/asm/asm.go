@@ -126,7 +126,7 @@ func assemblei(opcode OpCode, funct3 Funct3, args ...string) (uint32, error) {
 	if !ok {
 		return 0, ErrInvalidRegister
 	}
-	immi, err := strconv.ParseUint(args[2], 10, 12)
+	immi, err := strconv.ParseInt(args[2], 10, 12)
 	if err != nil {
 		return 0, ErrInvalidNumeral
 	}
