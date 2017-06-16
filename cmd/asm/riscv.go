@@ -113,38 +113,34 @@ func AssembleText(w io.Writer, o *Object) error {
 func parseCommand(tokens []string) (uint32, error) {
 	switch tokens[0] {
 	case "addi":
-		if len(tokens) != 4 {
-			return 0, ErrWrongInstrunctionFormat
-		}
-		rd, ok := RegNames[tokens[1]]
-		if !ok {
-			return 0, ErrInvalidRegister
-		}
-		rs, ok := RegNames[tokens[2]]
-		if !ok {
-			return 0, ErrInvalidRegister
-		}
-		immi, err := strconv.ParseUint(tokens[3], 10, 12)
-		if err != nil {
-			return 0, ErrInvalidNumeral
-		}
-		return iinstruction(OpImm, rd, Funct3Add, rs, uint32(immi))
+		return assemblei(OpImm, Funct3Add, tokens[1:]...)
 	case "li":
 		if len(tokens) != 3 {
 			return 0, ErrWrongInstrunctionFormat
 		}
-		rd, ok := RegNames[tokens[1]]
-		if !ok {
-			return 0, ErrInvalidRegister
-		}
-		immi, err := strconv.ParseUint(tokens[2], 10, 12)
-		if err != nil {
-			return 0, ErrInvalidNumeral
-		}
-		return iinstruction(OpImm, rd, Funct3Add, 0, uint32(immi))
+		return assemblei(OpImm, Funct3Add, tokens[1], "zero", tokens[2])
 	default:
 		return 0, ErrUnknownInstruction
 	}
+}
+
+func assemblei(opcode OpCode, funct3 Funct3, args ...string) (uint32, error) {
+	if len(args) != 3 {
+		return 0, ErrWrongInstrunctionFormat
+	}
+	rd, ok := RegNames[args[0]]
+	if !ok {
+		return 0, ErrInvalidRegister
+	}
+	rs, ok := RegNames[args[1]]
+	if !ok {
+		return 0, ErrInvalidRegister
+	}
+	immi, err := strconv.ParseUint(args[2], 10, 12)
+	if err != nil {
+		return 0, ErrInvalidNumeral
+	}
+	return iinstruction(OpImm, rd, Funct3Add, rs, uint32(immi))
 }
 
 func iinstruction(opcode OpCode, rd Reg, funct3 Funct3, rs1 Reg, immi uint32) (uint32, error) {
