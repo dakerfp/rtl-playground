@@ -152,7 +152,7 @@ func TestSamples(t *testing.T) {
 
 			obj, err := Parse(f)
 			check(t, err)
-			check(t, AssembleBinary(ioutil.Discard, obj))
+			check(t, Assemble(&BinaryEncoder{ioutil.Discard}, obj))
 		}(path.Join("samples", fi.Name()))
 	}
 }

@@ -58,13 +58,13 @@ func main() {
 		defer w.Close()
 	}
 
-	var assemble Assembler
+	var enc InstructionEncoder
 	if *txtFlag {
-		assemble = AssembleText
+		enc = &TextEncoder{w}
 	} else {
-		assemble = AssembleBinary
+		enc = &BinaryEncoder{w}
 	}
-	if err := assemble(w, obj); err != nil {
+	if err := Assemble(enc, obj); err != nil {
 		panic(err)
 	}
 }

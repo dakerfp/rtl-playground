@@ -2,9 +2,7 @@ package main
 
 import (
 	"bufio"
-	"encoding/binary"
 	"errors"
-	"fmt"
 	"io"
 	"strconv"
 	"strings"
@@ -84,25 +82,10 @@ func Parse(r io.Reader) (*Object, error) {
 	return obj, nil
 }
 
-type Assembler func(w io.Writer, o *Object) error
-
-func AssembleBinary(w io.Writer, o *Object) error {
+func Assemble(ie InstructionEncoder, o *Object) error {
 	for _, section := range o.Sections {
 		for _, instr := range section {
-			err := binary.Write(w, binary.LittleEndian, instr)
-			if err != nil {
-				return err
-			}
-		}
-	}
-	return nil
-}
-
-func AssembleText(w io.Writer, o *Object) error {
-	for _, section := range o.Sections {
-		for _, instr := range section {
-			_, err := fmt.Fprintln(w, uint32(instr))
-			if err != nil {
+			if err := ie.EncodeInstruction(instr); err != nil {
 				return err
 			}
 		}
