@@ -114,6 +114,16 @@ func parseCommand(tokens []string) (uint32, error) {
 	switch tokens[0] {
 	case "addi":
 		return assemblei(OpImm, Funct3Add, tokens[1:]...)
+	case "nop":
+		if len(tokens) != 1 {
+			return 0, ErrWrongInstrunctionFormat
+		}
+		return assemblei(OpImm, Funct3Add, "zero", "zero", "0")
+	case "mov":
+		if len(tokens) != 3 {
+			return 0, ErrWrongInstrunctionFormat
+		}
+		return assemblei(OpImm, Funct3Add, tokens[1], tokens[2], "0")
 	case "li":
 		if len(tokens) != 3 {
 			return 0, ErrWrongInstrunctionFormat
