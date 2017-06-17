@@ -31,20 +31,20 @@ begin
 	// li t0, 42
 	instruction = {12'd42, 5'd0, `FUNCT3_ADD, 5'd5, `OP_IMM};
 	tick;
-	assert(rd == 5'd5, "rd = 5");
-	assert(a == 32'd0, "a == 0");
-	assert(b == 32'd42, "b == 42");
-	assert(funct3 == 3'b000, "funct3 == add");
-	assert(~exception, "noexcept");
+	assert_if(rd == 5'd5, "rd = 5");
+	assert_if(a == 32'd0, "a == 0");
+	assert_if(b == 32'd42, "b == 42");
+	assert_if(funct3 == 3'b000, "funct3 == add");
+	assert_if(~exception, "noexcept");
 
 	// addi t1, zero, 9 == li t1, 9
 	instruction = {12'd9, 5'd0, `FUNCT3_ADD, 5'd6, `OP_IMM};
 	tick;
-	assert(rd == 5'd6, "rd = 6");
-	assert(a == 32'd0, "a == 0");
-	assert(b == 32'd9, "b == 9");
-	assert(funct3 == 3'b000, "funct3 == add");
-	assert(~exception, "noexcept");
+	assert_if(rd == 5'd6, "rd = 6");
+	assert_if(a == 32'd0, "a == 0");
+	assert_if(b == 32'd9, "b == 9");
+	assert_if(funct3 == 3'b000, "funct3 == add");
+	assert_if(~exception, "noexcept");
 end
 endtask
 

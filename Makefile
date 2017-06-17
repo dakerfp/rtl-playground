@@ -1,5 +1,5 @@
 
-VC=iverilog
+VC=iverilog -g2012
 TMP_OUTPUT=/tmp/vt.txt
 
 all: bin/asm bin/riscv
