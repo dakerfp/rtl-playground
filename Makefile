@@ -16,16 +16,14 @@ bin:
 bin/%.bin: examples/%.asm
 	bin/asm -o $@ $^
 
-test: gotest testsamples testtb
+test: gotest testtb testmisc testsamples
 
 gotest:
 	go test ./...
 
-testtb: testunittb testinttb
+testtb: mem.tb alu.tb riscv/if.tb riscv/id.tb riscv/id_if.tb
 
-testunittb: mem.tb alu.tb riscv/if.tb riscv/id.tb riscv/ex.tb
-
-testinttb: riscv/id_if.tb riscv/id_if.tb riscv/id_if_ex.tb
+testmisc: misc/pwm.tb
 
 %.tb: %_tb.v
 	@$(VC) $^ -o $@
