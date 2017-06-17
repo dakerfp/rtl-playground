@@ -18,7 +18,8 @@ module riscv_ex(
 );
 
 parameter XLEN = 32;
-parameter REGA = 5; // REGN == 32
+parameter REGN = 32;
+parameter REGA = $clog2(REGN);
 
 // forward rd
 always @(posedge clk or posedge rst) begin
