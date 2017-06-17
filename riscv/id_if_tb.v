@@ -16,6 +16,7 @@ riscv_if rv_if(
 	pc
 );
 
+reg [31:0] regs [31:0];
 reg [31:0] instruction;
 wire [31:0] a;
 wire [31:0] b;
@@ -26,6 +27,8 @@ wire exception;
 riscv_id rv_id (
 	rst,
 	clk,
+
+	regs,
 	instruction,
 	pc,
 
@@ -44,6 +47,7 @@ task test_if_id;
 begin
 	mem[0] = 32'd44040851;
 	bubble = 0;
+	regs[0] = 0;
 	reset;
 	// li t0, 42
 	tick; // needs 2 clocks to reach ID

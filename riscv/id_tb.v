@@ -4,6 +4,7 @@
 module riscv_id_tb();
 `include "test.v"
 
+reg [31:0] regs [31:0];
 reg [31:0] instruction;
 reg [31:0] pc;
 wire [31:0] a;
@@ -11,9 +12,12 @@ wire [31:0] b;
 wire [4:0] rd;
 wire [2:0] funct3;
 wire exception;
-riscv_id rv_id (
+
+riscv_id rv_id(
 	rst,
 	clk,
+
+	regs,
 	instruction,
 	pc,
 
@@ -26,6 +30,7 @@ riscv_id rv_id (
 
 task test_decode_immi;
 begin
+	regs[0] = 0;
 	reset;
 
 	// li t0, 42

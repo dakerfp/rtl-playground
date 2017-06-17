@@ -4,6 +4,8 @@
 module riscv_id(
 	input wire rst,
 	input wire clk,
+
+	input wire [XLEN-1:0] regs [REGN-1:0],
 	input wire [XLEN-1:0] instruction,
 	input wire [XLEN-1:0] pc,
 
@@ -15,9 +17,8 @@ module riscv_id(
 );
 
 parameter XLEN = 32;
-parameter REGA = 5; // REGN == 32
-
-reg [XLEN-1:0] regs [31:0]; // regs[0] == 0
+parameter REGN = 32;
+parameter REGA = $clog2(REGN);
 
 // Renaming
 wire [6:0] opcode;
@@ -45,10 +46,6 @@ assign immb = {{20{sign}}, instruction[7], instruction[30:25], instruction[11:8]
 assign immu = {instruction[31:12], 12'd0};
 assign immj = {{11{sign}},instruction[19:12],instruction[20],instruction[32:21], 1'd0};
 assign uimm = {instruction[19:15]};
-
-initial begin
-	regs[0] <= 0; // Must always be zero
-end
 
 always @(posedge clk or posedge rst) begin
 	if (rst)
