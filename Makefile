@@ -13,15 +13,12 @@ bin/asm: bin
 bin:
 	mkdir -p bin
 
-bin/%.bin: examples/%.asm
-	bin/asm -o $@ $^
-
 test: gotest testtb testmisc testsamples
 
 gotest:
 	go test ./...
 
-testtb: mem.tb alu.tb riscv/if.tb riscv/id.tb riscv/id_if.tb
+testtb: mem.tb alu.tb riscv/if.tb riscv/id.tb riscv/id_if.tb riscv/hart.tb
 
 testmisc: misc/pwm.tb
 
