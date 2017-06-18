@@ -1,11 +1,11 @@
 
-VC=iverilog -g2012
+VC=iverilog -g 2012
 TMP_OUTPUT=/tmp/vt.txt
 
 all: bin/asm bin/riscv
 
-bin/riscv: riscv_tb.v
-	@$(VC) $^ -o $@
+bin/riscv: riscv/riscv_sim.v
+	$(VC) $^ -o $@
 
 bin/asm: bin
 	go build -o $@ ./cmd/asm
@@ -34,7 +34,7 @@ testsamples: li.ts
 
 %.ts: examples/%.asm
 	@bin/asm -txt -o ./rom.txt $^
-	@iverilog -o $@ memread_tb.v
+	@$(VC) -o $@ memread_tb.v
 	./$@
 	@rm -rf ./rom.txt
 	@rm -rf $@
