@@ -1,5 +1,5 @@
 
-VC=iverilog -g 2012
+VC=iverilog -g2012
 TMP_OUTPUT=/tmp/vt.txt
 
 all: bin/asm bin/riscv
@@ -13,7 +13,7 @@ bin/asm: bin
 bin:
 	mkdir -p bin
 
-test: gotest testtb testmisc testsamples
+test: gotest testtb testmisc
 
 gotest:
 	go test ./...
@@ -27,7 +27,7 @@ testmisc: misc/pwm.tb
 	@./$@ > $TMP_OUTPUT && echo "[" $*_test "]: OK" || echo "[" $*_test "]: FAIL" && cat $TMP_OUTPUT
 	@rm $@
 
-testsamples: li.ts
+testsamples: bin/asm li.ts
 
 %.ts: examples/%.asm
 	@bin/asm -txt -o ./rom.txt $^
