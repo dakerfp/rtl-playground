@@ -21,6 +21,8 @@ const (
 	Funct3Bge         = 5
 	Funct3Bltu        = 6
 	Funct3Bgeu        = 7
+
+	Funct3None Funct3 = 0
 )
 
 const (

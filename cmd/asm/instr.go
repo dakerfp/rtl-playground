@@ -76,6 +76,21 @@ func assemblei(opcode OpCode, funct3 Funct3, args ...string) (uint32, error) {
 	return iinstruction(opcode, rd, Funct3Add, rs1, uint32(immi))
 }
 
+func assemblej(opcode OpCode, args ...string) (uint32, error) {
+	if len(args) != 2 {
+		return 0, ErrWrongInstrunctionFormat
+	}
+	rd, ok := RegNames[args[0]]
+	if !ok {
+		return 0, ErrInvalidRegister
+	}
+	immj, err := strconv.ParseInt(args[1], 10, 12)
+	if err != nil {
+		return 0, ErrInvalidNumeral
+	}
+	return jinstruction(opcode, rd, uint32(immj))
+}
+
 func rinstruction(opcode OpCode, rd Reg, funct3 Funct3, rs1 Reg, rs2 Reg, funct7 Funct7) (uint32, error) {
 	return concat(
 		bitslice{uint32(funct7), 7},
