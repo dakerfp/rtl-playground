@@ -35,7 +35,7 @@ func assembler(opcode OpCode, funct3 Funct3, funct7 Funct7, args ...string) (uin
 	if !ok {
 		return 0, ErrInvalidRegister
 	}
-	return rinstruction(OpImm, rd, Funct3Add, rs1, rs2, funct7)
+	return rinstruction(opcode, rd, Funct3Add, rs1, rs2, funct7)
 }
 
 func assembleb(opcode OpCode, funct3 Funct3, args ...string) (uint32, error) {
@@ -73,7 +73,7 @@ func assemblei(opcode OpCode, funct3 Funct3, args ...string) (uint32, error) {
 	if err != nil {
 		return 0, ErrInvalidNumeral
 	}
-	return iinstruction(OpImm, rd, Funct3Add, rs1, uint32(immi))
+	return iinstruction(opcode, rd, Funct3Add, rs1, uint32(immi))
 }
 
 func rinstruction(opcode OpCode, rd Reg, funct3 Funct3, rs1 Reg, rs2 Reg, funct7 Funct7) (uint32, error) {
