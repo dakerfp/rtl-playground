@@ -76,6 +76,25 @@ func assemblei(opcode OpCode, funct3 Funct3, args ...string) (uint32, error) {
 	return iinstruction(opcode, rd, Funct3Add, rs1, uint32(immi))
 }
 
+func assembleis(opcode OpCode, funct3 Funct3, funct7 Funct7, args ...string) (uint32, error) {
+	if len(args) != 3 {
+		return 0, ErrWrongInstrunctionFormat
+	}
+	rd, ok := RegNames[args[0]]
+	if !ok {
+		return 0, ErrInvalidRegister
+	}
+	rs1, ok := RegNames[args[1]]
+	if !ok {
+		return 0, ErrInvalidRegister
+	}
+	shamt, err := strconv.ParseInt(args[2], 10, 12)
+	if err != nil {
+		return 0, ErrInvalidNumeral
+	}
+	return isinstruction(opcode, rd, Funct3Add, rs1, uint32(shamt), funct7)
+}
+
 func assemblej(opcode OpCode, args ...string) (uint32, error) {
 	if len(args) != 2 {
 		return 0, ErrWrongInstrunctionFormat
@@ -105,6 +124,17 @@ func rinstruction(opcode OpCode, rd Reg, funct3 Funct3, rs1 Reg, rs2 Reg, funct7
 func iinstruction(opcode OpCode, rd Reg, funct3 Funct3, rs1 Reg, immi uint32) (uint32, error) {
 	return concat(
 		bitslice{immi, 12},
+		bitslice{uint32(rs1), 5},
+		bitslice{uint32(funct3), 3},
+		bitslice{uint32(rd), 5},
+		bitslice{uint32(opcode), 7},
+	)
+}
+
+func isinstruction(opcode OpCode, rd Reg, funct3 Funct3, rs1 Reg, shamt uint32, funct7 Funct7) (uint32, error) {
+	return concat(
+		bitslice{uint32(funct7), 7},
+		bitslice{shamt, 5},
 		bitslice{uint32(rs1), 5},
 		bitslice{uint32(funct3), 3},
 		bitslice{uint32(rd), 5},

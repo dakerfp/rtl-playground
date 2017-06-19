@@ -110,19 +110,38 @@ func parseCommand(tokens []string) (uint32, error) {
 		return assembleb(OpBranch, Funct3Bltu, tokens[1:]...)
 	case "bgeu":
 		return assembleb(OpBranch, Funct3Bgeu, tokens[1:]...)
+	// Register operations
+	case "add":
+		return assembler(Op, Funct3Add, Funct7Add, tokens[1:]...)
+	case "slt":
+		return assembler(Op, Funct3Slt, Funct7None, tokens[1:]...)
+	case "sltu":
+		return assembler(Op, Funct3Sltu, Funct7None, tokens[1:]...)
+	case "and":
+		return assembler(Op, Funct3And, Funct7None, tokens[1:]...)
+	case "or":
+		return assembler(Op, Funct3Or, Funct7None, tokens[1:]...)
+	case "xor":
+		return assembler(Op, Funct3Xor, Funct7None, tokens[1:]...)
+	// Register shift operation
+	case "sll":
+		return assembler(Op, Funct3Sll, Funct7Sll, tokens[1:]...)
+	case "srl":
+		return assembler(Op, Funct3Srl, Funct7Srl, tokens[1:]...)
+	case "sra":
+		return assembler(Op, Funct3Sra, Funct7Sra, tokens[1:]...)
+	// Register sub operation
+	case "sub":
+		return assembler(Op, Funct3Add, Funct7Sub, tokens[1:]...)
 	// Immediate operations
 	case "addi":
 		return assemblei(OpImm, Funct3Add, tokens[1:]...)
-	case "slli":
-		return assemblei(OpImm, Funct3Sll, tokens[1:]...)
 	case "slti":
 		return assemblei(OpImm, Funct3Slt, tokens[1:]...)
 	case "sltiu":
 		return assemblei(OpImm, Funct3Sltu, tokens[1:]...)
 	case "xori":
 		return assemblei(OpImm, Funct3Xor, tokens[1:]...)
-	case "srli", "srai": // TODO
-		return assemblei(OpImm, Funct3SrlSra, tokens[1:]...)
 	case "ori":
 		return assemblei(OpImm, Funct3Or, tokens[1:]...)
 	case "andi":
@@ -131,7 +150,14 @@ func parseCommand(tokens []string) (uint32, error) {
 		return assembleu(OpLui, tokens[1:]...)
 	case "auipc":
 		return assembleu(OpAuipc, tokens[1:]...)
-	// pseudo instructions
+	// Immediate shifts
+	case "srli":
+		return assembleis(OpImm, Funct3Srl, Funct7Srl, tokens[1:]...)
+	case "srai":
+		return assembleis(OpImm, Funct3Sra, Funct7Sra, tokens[1:]...)
+	case "slli":
+		return assembleis(OpImm, Funct3Sll, Funct7Sll, tokens[1:]...)
+	// Pseudo instructions
 	case "nop":
 		if len(tokens) != 1 {
 			return 0, ErrWrongInstrunctionFormat
