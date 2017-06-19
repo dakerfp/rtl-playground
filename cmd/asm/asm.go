@@ -92,6 +92,10 @@ func Assemble(ie InstructionEncoder, o *Object) error {
 
 func parseCommand(tokens []string) (uint32, error) {
 	switch tokens[0] {
+	case "lui":
+		return assembleu(OpLui, tokens[1:]...)
+	case "auipc":
+		return assembleu(OpAuipc, tokens[1:]...)
 	case "addi":
 		return assemblei(OpImm, Funct3Add, tokens[1:]...)
 	case "slli":
