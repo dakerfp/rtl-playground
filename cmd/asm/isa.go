@@ -6,14 +6,14 @@ type Funct3 uint32
 type Funct7 uint32
 
 const (
-	Funct3Add    = Funct3(0)
-	Funct3Sll    = Funct3(1)
-	Funct3Slt    = Funct3(2)
-	Funct3Sltu   = Funct3(3)
-	Funct3Xor    = Funct3(4)
-	Funct3SrlSra = Funct3(5)
-	Funct3Or     = Funct3(6)
-	Funct3And    = Funct3(7)
+	Funct3Add    Funct3 = 0
+	Funct3Sll           = 1
+	Funct3Slt           = 2
+	Funct3Sltu          = 3
+	Funct3Xor           = 4
+	Funct3SrlSra        = 5
+	Funct3Or            = 6
+	Funct3And           = 7
 
 	Funct3Beq  Funct3 = 0
 	Funct3Bne         = 1
@@ -26,22 +26,22 @@ const (
 )
 
 const (
-	OpImm    = OpCode(19)
-	Op       = OpCode(51)
-	OpLui    = OpCode(55)
-	OpStore  = OpCode(35)
-	OpLoad   = OpCode(3)
-	OpJal    = OpCode(111)
-	OpJalr   = OpCode(103)
-	OpAuipc  = OpCode(23)
-	OpBranch = OpCode(99)
-	OpFence  = OpCode(15)
-	OpSystem = OpCode(115)
+	OpImm    OpCode = 19
+	Op              = 51
+	OpLui           = 55
+	OpStore         = 35
+	OpLoad          = 3
+	OpJal           = 111
+	OpJalr          = 103
+	OpAuipc         = 23
+	OpBranch        = 99
+	OpFence         = 15
+	OpSystem        = 115
 )
 
 const (
-	Funct7None = OpCode(0)
-	Funct7Add  = OpCode(0)
+	Funct7None Funct7 = 0
+	Funct7Add         = 0
 )
 
 var RegNames = map[string]Reg{
