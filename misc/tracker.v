@@ -12,58 +12,67 @@
 `define EFF_FAST_ARPEGGIO 3'd6
 `define EFF_SLOW_ARPEGGIO 3'd7
 
+typedef struct packed {
+	bit [2:0] tone;
+	bit [2:0] octave;
+	bit [1:0] instrument;
+	bit [4:0] volume;
+	bit [2:0] effect;
+} note_tp;
+
 module tracker(
 	input rst,
 	input clk,
 
-	input [15:0] note,
-	input [SPLEN-1:0] speed,
+	input note_tp note,
 
-	output reg [7:0] amplitude
+	input [SPLEN-1:0] speed,
+	output reg [AMPLEN-1:0] amplitude
 );
 
 parameter PERIOD = 256;
 parameter TLEN = $clog2(PERIOD);
+parameter MAXAMPLITUDE = 256;
+parameter AMPLEN = $clog2(MAXAMPLITUDE);
 parameter MAXSPEED = 16;
 parameter SPLEN = $clog2(MAXSPEED);
 
-`include "sinlut.v"
+`include "misc/sinlut.v"
 `include "misc/randlut.v"
 
-wire [2:0] tone = note[15:13];
-wire [2:0] octave = note[12:10];
-wire [1:0] instrument = note[10:8];
-wire [2:0] volume = note[8:5];
-wire [2:0] effect = note[2:0];
-
-reg [TLEN-1:0] t;
-always @(posedge rst or posedge clk) begin
-	if (rst) t <= 0;
-	else if (clk) t <= t + speed;
-end
-
-
-function square(
-	input t
-);
+function [AMPLEN-1:0] square;
+input [TLEN-1:0] t;
 begin
-	if (t < PERIOD / 2) square = 0;
-	else square = 255;
+	if (t < (PERIOD / 2))
+		square = 0;
+	else
+		square = MAXAMPLITUDE - 1;
 end
 endfunction
 
+function [AMPLEN-1:0] wave;
+input [TLEN-1:0] t;
+input [1:0] instrument;
+case (instrument)
+	`INSTR_SIN: wave = 128 + sinlut(t); // XXX
+	`INSTR_SQUARE: wave = square(t);
+	`INSTR_SAW: wave = t;
+	`INSTR_RAND: wave = randlut(t);
+endcase
+endfunction
+
+reg [TLEN-1:0] t;
 always @(posedge rst or posedge clk) begin
 	if (rst) begin
-		amplitude <= 0;
+		t <= 0;
 	end
 	else if (clk) begin
-		case (instrument)
-		`INSTR_SIN: amplitude <= sinlut(t);
-		`INSTR_SQUARE: amplitude <= square(t);
-		`INSTR_SAW: amplitude <= t;
-		`INSTR_RAND: amplitude <= randlut(t); // XXX
-		endcase
+		t <= t + speed;
 	end
+end
+
+always @(posedge clk) begin
+	amplitude <= wave(t, note.instrument);
 end
 
 endmodule

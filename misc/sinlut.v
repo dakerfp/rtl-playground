@@ -1,16 +1,18 @@
 /*
 import math
 
+bits = 8
+
 def sinlut(bits):
-	rlut = [math.sin(float(i) * 2 * math.pi / 2**bits) for i in range(2**bits)]
+	rlut = [0.5 + 0.5 * math.sin(float(i) * 2 * math.pi / 2**bits) for i in range(2**bits)]
 	return [min(int(round(x * (2 ** (bits-1)))), (2**(bits-1))-1) for x in rlut]
 
 print('''
 function sinlut;
 input x;
 case(x)
-''')
-for x in rlut:
+''' % ())
+for i, x in enumerate(sinlut(8)):
     print("%d: sinlut = %d;" % (i,x))
 print('''
 default: sinlut = 0;
@@ -19,8 +21,9 @@ endfunction
 ''')
 */
 
-function sinlut;
-input x;
+function [7:0] sinlut;
+input [7:0] x;
+begin
 case(x)
 000: sinlut = -108;
 001: sinlut = -106;
@@ -280,4 +283,5 @@ case(x)
 255: sinlut = -109;
 default: sinlut = 0;
 endcase
+end
 endfunction

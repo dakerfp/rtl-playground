@@ -5,7 +5,7 @@ module tracker_tb();
 `include "test.v"
 
 
-reg  [15:0] note;
+reg  note_tp note;
 reg  [3:0] speed;
 
 wire [7:0] ampl;
@@ -24,8 +24,15 @@ integer i;
 task test_square_wave;
 begin
 	reset;
-	note = {3'd5, 3'd1, `INSTR_SQUARE, 3'd7, 3'd0, `EFF_NONE};
-	for (i=0; i < 1024; i=i+1) tick;
+	speed = 4'b1;
+	note.instrument = `INSTR_SIN;
+	for (i=0; i < 256; i=i+1) tick;
+	note.instrument = `INSTR_SQUARE;
+	for (i=0; i < 256; i=i+1) tick;
+	note.instrument = `INSTR_SAW;
+	for (i=0; i < 256; i=i+1) tick;
+	note.instrument = `INSTR_RAND;
+	for (i=0; i < 256; i=i+1) tick;
 end
 endtask
 

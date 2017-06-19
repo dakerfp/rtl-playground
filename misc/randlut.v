@@ -2,16 +2,18 @@
 import math
 import random
 
+bits = 8
+
 def randlut(bits):
 	r = range(1 << bits)
 	random.shuffle(r)
 	return r
 
 print('''
-function randlut;
-input x;
+function [%d:0] randlut;
+input [%d:0] x;
 case(x)
-''')
+''' % (bits - 1, bits - 1)
 for i, x in enumerate(randlut(8)):
     print("%d: randlut = %d;" % (i,x))
 print('''
@@ -21,8 +23,9 @@ endfunction
 ''')
 */
 
-function randlut;
-input x;
+function [7:0] randlut;
+input [7:0] x;
+begin
 case(x)
 0: randlut = 11;
 1: randlut = 81;
@@ -280,7 +283,7 @@ case(x)
 253: randlut = 250;
 254: randlut = 64;
 255: randlut = 213;
-default: randlut = 0;
 endcase
+end
 endfunction
 
