@@ -20,7 +20,7 @@ gotest:
 
 testtb: mem.tb alu.tb riscv/if.tb riscv/id.tb riscv/id_if.tb riscv/hart.tb
 
-testmisc: misc/pwm.tb
+testmisc: misc/pwm.tb misc/tracker.tb
 
 %.tb: %_tb.v
 	@$(VC) $^ -o $@
