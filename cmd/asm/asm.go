@@ -3,8 +3,8 @@ package main
 import (
 	"bufio"
 	"errors"
+	"fmt"
 	"io"
-	"strconv"
 	"strings"
 )
 
@@ -70,7 +70,7 @@ func Parse(r io.Reader) (*Object, error) {
 		}
 		cmd, err := parseCommand(tokens) // does not support large pseudo instructions
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("error on line %d: %q", lineno, err)
 		}
 		obj.Sections[currsection] = append(obj.Sections[currsection], cmd)
 		instrno++
