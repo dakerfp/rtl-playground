@@ -54,7 +54,7 @@ function [AMPLEN-1:0] wave;
 input [TLEN-1:0] t;
 input [1:0] instrument;
 case (instrument)
-	`INSTR_SIN: wave = 128 + sinlut(t); // XXX
+	`INSTR_SIN: wave = sinlut(t);
 	`INSTR_SQUARE: wave = square(t);
 	`INSTR_SAW: wave = t;
 	`INSTR_RAND: wave = randlut(t);
