@@ -129,35 +129,6 @@ func parseCommand(tokens []string) (uint32, error) {
 	}
 }
 
-func assemblei(opcode OpCode, funct3 Funct3, args ...string) (uint32, error) {
-	if len(args) != 3 {
-		return 0, ErrWrongInstrunctionFormat
-	}
-	rd, ok := RegNames[args[0]]
-	if !ok {
-		return 0, ErrInvalidRegister
-	}
-	rs1, ok := RegNames[args[1]]
-	if !ok {
-		return 0, ErrInvalidRegister
-	}
-	immi, err := strconv.ParseInt(args[2], 10, 12)
-	if err != nil {
-		return 0, ErrInvalidNumeral
-	}
-	return iinstruction(OpImm, rd, Funct3Add, rs1, uint32(immi))
-}
-
-func iinstruction(opcode OpCode, rd Reg, funct3 Funct3, rs1 Reg, immi uint32) (uint32, error) {
-	return concat(
-		bitslice{immi, 12},
-		bitslice{uint32(rs1), 5},
-		bitslice{uint32(funct3), 3},
-		bitslice{uint32(rd), 5},
-		bitslice{uint32(opcode), 7},
-	)
-}
-
 func islabel(token string) bool {
 	return len(token) > 1 && token[len(token)-1] == ':'
 }

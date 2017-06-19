@@ -26,6 +26,10 @@ func bitmask(v, from, to uint32) uint32 {
 	return mask & v
 }
 
+func getbits(v, from, to uint32) bitslice {
+	return bitslice{bitmask(v, from, to) >> from, to - from}
+}
+
 func emplace(bits, v, from, to uint32) (uint32, error) {
 	shiftv := v << from
 	v = bitmask(shiftv, from, to)

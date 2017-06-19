@@ -3,6 +3,7 @@ package main
 type OpCode uint32
 type Reg uint32
 type Funct3 uint32
+type Funct7 uint32
 
 const (
 	Funct3Add    = Funct3(0)
@@ -27,6 +28,11 @@ const (
 	OpBranch = OpCode(99)
 	OpFence  = OpCode(15)
 	OpSystem = OpCode(115)
+)
+
+const (
+	Funct7None = OpCode(0)
+	Funct7Add  = OpCode(0)
 )
 
 var RegNames = map[string]Reg{

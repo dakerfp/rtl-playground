@@ -22,7 +22,6 @@
 // ECALL, EBREAK, CSRRW, CSRRS, CSRRC, CSRRWI, CSRRSI, CSRRCI
 `define OP_SYSTEM 7'b1110011
 
-
 // ALU funct3
 `define FUNCT3_ADD     3'b000
 `define FUNCT3_SLL     3'b001
