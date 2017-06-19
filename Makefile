@@ -1,6 +1,6 @@
 
 VC=iverilog -g2012
-TMP_OUTPUT=/tmp/vt.txt
+TMPOUTPUT=/tmp/vt.txt
 
 all: bin/asm bin/riscv
 
@@ -24,7 +24,7 @@ testmisc: misc/pwm.tb misc/tracker.tb
 
 %.tb: %_tb.v
 	@$(VC) $^ -o $@
-	@./$@ > $TMP_OUTPUT && echo "[" $*_test "]: OK" || echo "[" $*_test "]: FAIL" && cat $TMP_OUTPUT
+	@./$@ > $TMPOUTPUT && echo "[" $*_test "]: OK" || echo "[" $*_test "]: FAIL" && cat $TMPOUTPUT
 	@rm $@
 
 testsamples: bin/asm li.ts
