@@ -20,7 +20,7 @@ var (
 type Section []uint32
 
 type Object struct {
-	Labels   map[string]int
+	Symbols  map[string]int
 	Sections map[string]Section
 }
 
@@ -52,16 +52,16 @@ func Parse(r io.Reader) (*Object, error) {
 			continue
 		}
 
-		// read label, if there is any
+		// read symbol, if there is any
 		if len(tokens) == 0 {
 			continue
 		}
-		if label := tokens[0]; islabel(label) {
+		if symbol := tokens[0]; issymbol(symbol) {
 			tokens = tokens[1:]
-			if _, ok := obj.Labels[label]; ok {
-				return nil, errors.New("repeated label: " + label)
+			if _, ok := obj.Symbols[symbol]; ok {
+				return nil, errors.New("repeated symbol: " + symbol)
 			}
-			obj.Labels[label] = instrno
+			obj.Symbols[symbol] = instrno
 		}
 
 		// read instruction
@@ -183,6 +183,6 @@ func parseCommand(tokens []string) (uint32, error) {
 	}
 }
 
-func islabel(token string) bool {
+func issymbol(token string) bool {
 	return len(token) > 1 && token[len(token)-1] == ':'
 }
