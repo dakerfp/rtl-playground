@@ -14,6 +14,13 @@ const (
 	Funct3SrlSra = Funct3(5)
 	Funct3Or     = Funct3(6)
 	Funct3And    = Funct3(7)
+
+	Funct3Beq  Funct3 = 0
+	Funct3Bne         = 1
+	Funct3Blt         = 4
+	Funct3Bge         = 5
+	Funct3Bltu        = 6
+	Funct3Bgeu        = 7
 )
 
 const (

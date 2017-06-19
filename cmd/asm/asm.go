@@ -92,10 +92,25 @@ func Assemble(ie InstructionEncoder, o *Object) error {
 
 func parseCommand(tokens []string) (uint32, error) {
 	switch tokens[0] {
+	// Inconditional branches
 	case "lui":
 		return assembleu(OpLui, tokens[1:]...)
 	case "auipc":
 		return assembleu(OpAuipc, tokens[1:]...)
+	// Conditional branches
+	case "beq":
+		return assembleb(OpBranch, Funct3Beq, tokens[1:]...)
+	case "bne":
+		return assembleb(OpBranch, Funct3Bne, tokens[1:]...)
+	case "blt":
+		return assembleb(OpBranch, Funct3Blt, tokens[1:]...)
+	case "bge":
+		return assembleb(OpBranch, Funct3Bge, tokens[1:]...)
+	case "bltu":
+		return assembleb(OpBranch, Funct3Bltu, tokens[1:]...)
+	case "bgeu":
+		return assembleb(OpBranch, Funct3Bgeu, tokens[1:]...)
+	// Immediate operations
 	case "addi":
 		return assemblei(OpImm, Funct3Add, tokens[1:]...)
 	case "slli":
@@ -112,7 +127,7 @@ func parseCommand(tokens []string) (uint32, error) {
 		return assemblei(OpImm, Funct3Or, tokens[1:]...)
 	case "andi":
 		return assemblei(OpImm, Funct3Or, tokens[1:]...)
-	// pseudo functions
+	// pseudo instructions
 	case "nop":
 		if len(tokens) != 1 {
 			return 0, ErrWrongInstrunctionFormat
