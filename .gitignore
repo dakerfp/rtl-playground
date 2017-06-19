@@ -1,3 +1,4 @@
 *.tb
 *.vcd
 bin
+a.out
