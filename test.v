@@ -30,6 +30,7 @@ task assert_if(
 begin
 	if (cond !== 1) begin
 		$display("[ FAIL ] %s", msg);
+		$error;
 		$finish;
 	end
 end

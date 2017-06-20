@@ -21,9 +21,9 @@ gotest:
 
 testtb: testunittb testinttb
 
-testunittb: mem.tb alu.tb riscv/if.tb riscv/id.tb riscv/ex.tb riscv/ma.tb
+testunittb: mem.tb alu.tb riscv/if.tb riscv/id.tb riscv/ex.tb riscv/ma.tb riscv/wb.tb
 
-testinttb: riscv/id_if.tb riscv/if_id_ma.tb riscv/hart.tb
+testinttb: riscv/id_if.tb riscv/id_if_ex.tb riscv/hart.tb
 
 testmisc: misc/pwm.tb misc/tracker.tb
 
