@@ -62,8 +62,8 @@ func Parse(r io.Reader) (*Object, error) {
 			continue
 		}
 
-		if symbol := tokens[0]; issymbol(symbol) {
-			tokens = tokens[1:]
+		// try parsing label
+		if symbol, ok := parseSymbol(tokens[0]); ok {
 			if _, ok := obj.Symbols[symbol]; ok {
 				return nil, fmt.Errorf("symbol %q redefined at line %d", symbol, lineno)
 			}
@@ -73,6 +73,7 @@ func Parse(r io.Reader) (*Object, error) {
 				Lineno:      lineno,
 				Instrno:     instrno,
 			}
+			tokens = tokens[1:] // removing symbol from list of tokens
 		}
 
 		// read instruction
@@ -197,10 +198,13 @@ func parseCommand(tokens []string) (uint32, error) {
 		}
 		return assemblej(OpJal, "zero", tokens[1])
 	default:
-		return 0, ErrUnknownInstruction
+		return 0, &ParseError{ErrUnknownInstruction, 0, tokens[0]}
 	}
 }
 
-func issymbol(token string) bool {
-	return len(token) > 1 && token[len(token)-1] == ':'
+func parseSymbol(token string) (string, bool) {
+	if len(token) <= 1 || token[len(token)-1] != ':' {
+		return "", false
+	}
+	return token[:len(token)-1], true
 }
