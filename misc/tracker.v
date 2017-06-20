@@ -36,6 +36,7 @@ parameter MAXAMPLITUDE = 256;
 parameter AMPLEN = $clog2(MAXAMPLITUDE);
 parameter MAXSPEED = 16;
 parameter SPLEN = $clog2(MAXSPEED);
+parameter MAXVOLUME = 1 << 5;
 
 `include "misc/sinlut.v"
 `include "misc/randlut.v"

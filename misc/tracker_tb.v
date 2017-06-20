@@ -25,6 +25,7 @@ task test_square_wave;
 begin
 	reset;
 	speed = 4'b1;
+	note.volume = t.MAXVOLUME;
 	note.instrument = `INSTR_SIN;
 	for (i=0; i < 256; i=i+1) tick;
 	note.instrument = `INSTR_SQUARE;
