@@ -23,6 +23,16 @@ const (
 	Funct3Bltu        = 6
 	Funct3Bgeu        = 7
 
+	Funct3LoadB  Funct3 = 0
+	Funct3LoadH         = 1
+	Funct3LoadW         = 2
+	Funct3LoadBU        = 4
+	Funct3LoadHU        = 5
+
+	Funct3StoreB Funct3 = 0
+	Funct3StoreH        = 1
+	Funct3StoreW        = 2
+
 	Funct3None Funct3 = 0
 )
 

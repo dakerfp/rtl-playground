@@ -191,6 +191,24 @@ func parseCommand(tokens []string) (uint32, error) {
 		return assembleis(OpImm, Funct3Sra, Funct7Sra, tokens[1:]...)
 	case "slli":
 		return assembleis(OpImm, Funct3Sll, Funct7Sll, tokens[1:]...)
+	// Load
+	case "lb":
+		return assemblei(OpLoad, Funct3LoadB, tokens[1:]...)
+	case "lbu":
+		return assemblei(OpLoad, Funct3LoadBU, tokens[1:]...)
+	case "lh":
+		return assemblei(OpLoad, Funct3LoadH, tokens[1:]...)
+	case "lhu":
+		return assemblei(OpLoad, Funct3LoadHU, tokens[1:]...)
+	case "lw":
+		return assemblei(OpLoad, Funct3LoadW, tokens[1:]...)
+	// Store
+	case "sb":
+		return assembles(OpStore, Funct3StoreB, tokens[1:]...)
+	case "sh":
+		return assembles(OpStore, Funct3StoreH, tokens[1:]...)
+	case "sw":
+		return assembles(OpStore, Funct3StoreW, tokens[1:]...)
 	// Pseudo instructions
 	case "nop":
 		if len(tokens) != 1 {

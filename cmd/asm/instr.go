@@ -92,7 +92,26 @@ func assembleis(opcode OpCode, funct3 Funct3, funct7 Funct7, args ...string) (ui
 	if err != nil {
 		return 0, ErrInvalidNumeral
 	}
-	return isinstruction(opcode, rd, Funct3Add, rs1, uint32(shamt), funct7)
+	return isinstruction(opcode, rd, funct3, rs1, uint32(shamt), funct7)
+}
+
+func assembles(opcode OpCode, funct3 Funct3, args ...string) (uint32, error) {
+	if len(args) != 3 {
+		return 0, ErrWrongInstrunctionFormat
+	}
+	rs1, ok := RegNames[args[0]]
+	if !ok {
+		return 0, ErrInvalidRegister
+	}
+	rs2, ok := RegNames[args[1]]
+	if !ok {
+		return 0, ErrInvalidRegister
+	}
+	imms, err := strconv.ParseInt(args[2], 10, 12)
+	if err != nil {
+		return 0, ErrInvalidNumeral
+	}
+	return sinstruction(opcode, Funct3Add, rs1, rs2, uint32(imms))
 }
 
 func assemblej(opcode OpCode, args ...string) (uint32, error) {
@@ -142,7 +161,7 @@ func isinstruction(opcode OpCode, rd Reg, funct3 Funct3, rs1 Reg, shamt uint32, 
 	)
 }
 
-func sinstruction(opcode OpCode, rs1 Reg, rs2 Reg, funct3 Funct3, imms uint32) (uint32, error) {
+func sinstruction(opcode OpCode, funct3 Funct3, rs1 Reg, rs2 Reg, imms uint32) (uint32, error) {
 	return concat(
 		getbits(imms, 5, 12), // TODO: check overflow
 		bitslice{uint32(rs2), 5},
