@@ -7,7 +7,7 @@ module riscv_ex_tb();
 reg [4:0] rdi;
 reg [31:0] a;
 reg [31:0] b;
-reg [5:0] shamt;
+reg [4:0] shamt;
 reg [2:0] funct3;
 reg invertb;
 
