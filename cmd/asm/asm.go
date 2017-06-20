@@ -230,6 +230,9 @@ func parseCommand(tokens []string) (uint32, error) {
 			return 0, ErrWrongInstrunctionFormat
 		}
 		return assemblej(OpJal, "zero", tokens[1])
+	case "fence", "fence.i", "ecall", "ebreak", "csrrw", "csrrs", "csrrc",
+		"csrrwi", "csrrsi", "csrrci":
+		return 0, ErrNotImplemented
 	default:
 		return 0, ErrUnknownInstruction
 	}
