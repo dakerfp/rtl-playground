@@ -19,8 +19,15 @@ var (
 
 type Section []uint32
 
+type Symbol struct {
+	Name        string
+	SectionName string
+	Lineno      int
+	Instrno     int
+}
+
 type Object struct {
-	Symbols  map[string]int
+	Symbols  map[string]Symbol
 	Sections map[string]Section
 }
 
@@ -29,7 +36,7 @@ func Parse(r io.Reader) (*Object, error) {
 	lineno := 0
 	instrno := 0
 	obj := &Object{
-		make(map[string]int),
+		make(map[string]Symbol),
 		make(map[string]Section),
 	}
 	currsection := ".text"
@@ -59,9 +66,14 @@ func Parse(r io.Reader) (*Object, error) {
 		if symbol := tokens[0]; issymbol(symbol) {
 			tokens = tokens[1:]
 			if _, ok := obj.Symbols[symbol]; ok {
-				return nil, errors.New("repeated symbol: " + symbol)
+				return nil, fmt.Errorf("symbol %q redefined at line %d", symbol, lineno)
 			}
-			obj.Symbols[symbol] = instrno
+			obj.Symbols[symbol] = Symbol{
+				Name:        symbol,
+				SectionName: currsection,
+				Lineno:      lineno,
+				Instrno:     instrno,
+			}
 		}
 
 		// read instruction
