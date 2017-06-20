@@ -110,7 +110,7 @@ func Assemble(ie InstructionEncoder, o *Object) error {
 	for _, section := range o.Sections {
 		for _, instr := range section {
 			if err := ie.EncodeInstruction(instr); err != nil {
-				return &ParseError{err, lineno, line}
+				return err
 			}
 		}
 	}
