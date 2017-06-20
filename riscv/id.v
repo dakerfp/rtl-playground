@@ -44,7 +44,7 @@ assign immi = {{22{sign}}, instruction[30:20]};
 assign imms = {{22{sign}}, instruction[30:25], instruction[11:8], instruction[7]};
 assign immb = {{20{sign}}, instruction[7], instruction[30:25], instruction[11:8], 1'd0};
 assign immu = {instruction[31:12], 12'd0};
-assign immj = {{11{sign}},instruction[19:12],instruction[20],instruction[30:21], 1'd0};
+assign immj = {{11{sign}},instruction[19:12],instruction[20],instruction[31:21], 1'd0};
 assign uimm = {instruction[19:15]};
 
 always @(posedge clk or posedge rst) begin
