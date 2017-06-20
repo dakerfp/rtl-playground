@@ -3,8 +3,8 @@ package main
 import (
 	"bufio"
 	"errors"
+	"fmt"
 	"io"
-	"strconv"
 	"strings"
 )
 
@@ -20,7 +20,7 @@ var (
 type Section []uint32
 
 type Object struct {
-	Labels   map[string]int
+	Symbols  map[string]int
 	Sections map[string]Section
 }
 
@@ -52,16 +52,16 @@ func Parse(r io.Reader) (*Object, error) {
 			continue
 		}
 
-		// read label, if there is any
+		// read symbol, if there is any
 		if len(tokens) == 0 {
 			continue
 		}
-		if label := tokens[0]; islabel(label) {
+		if symbol := tokens[0]; issymbol(symbol) {
 			tokens = tokens[1:]
-			if _, ok := obj.Labels[label]; ok {
-				return nil, errors.New("repeated label: " + label)
+			if _, ok := obj.Symbols[symbol]; ok {
+				return nil, errors.New("repeated symbol: " + symbol)
 			}
-			obj.Labels[label] = instrno
+			obj.Symbols[symbol] = instrno
 		}
 
 		// read instruction
@@ -70,7 +70,7 @@ func Parse(r io.Reader) (*Object, error) {
 		}
 		cmd, err := parseCommand(tokens) // does not support large pseudo instructions
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("error on line %d: %q", lineno, err)
 		}
 		obj.Sections[currsection] = append(obj.Sections[currsection], cmd)
 		instrno++
@@ -92,23 +92,72 @@ func Assemble(ie InstructionEncoder, o *Object) error {
 
 func parseCommand(tokens []string) (uint32, error) {
 	switch tokens[0] {
+	// Inconditional branches
+	case "jal":
+		return assemblej(OpJal, tokens[1:]...)
+	case "jalr":
+		return assemblei(OpJalr, Funct3Add, tokens[1:]...)
+	// Conditional branches
+	case "beq":
+		return assembleb(OpBranch, Funct3Beq, tokens[1:]...)
+	case "bne":
+		return assembleb(OpBranch, Funct3Bne, tokens[1:]...)
+	case "blt":
+		return assembleb(OpBranch, Funct3Blt, tokens[1:]...)
+	case "bge":
+		return assembleb(OpBranch, Funct3Bge, tokens[1:]...)
+	case "bltu":
+		return assembleb(OpBranch, Funct3Bltu, tokens[1:]...)
+	case "bgeu":
+		return assembleb(OpBranch, Funct3Bgeu, tokens[1:]...)
+	// Register operations
+	case "add":
+		return assembler(Op, Funct3Add, Funct7Add, tokens[1:]...)
+	case "slt":
+		return assembler(Op, Funct3Slt, Funct7None, tokens[1:]...)
+	case "sltu":
+		return assembler(Op, Funct3Sltu, Funct7None, tokens[1:]...)
+	case "and":
+		return assembler(Op, Funct3And, Funct7None, tokens[1:]...)
+	case "or":
+		return assembler(Op, Funct3Or, Funct7None, tokens[1:]...)
+	case "xor":
+		return assembler(Op, Funct3Xor, Funct7None, tokens[1:]...)
+	// Register shift operation
+	case "sll":
+		return assembler(Op, Funct3Sll, Funct7Sll, tokens[1:]...)
+	case "srl":
+		return assembler(Op, Funct3Srl, Funct7Srl, tokens[1:]...)
+	case "sra":
+		return assembler(Op, Funct3Sra, Funct7Sra, tokens[1:]...)
+	// Register sub operation
+	case "sub":
+		return assembler(Op, Funct3Add, Funct7Sub, tokens[1:]...)
+	// Immediate operations
 	case "addi":
 		return assemblei(OpImm, Funct3Add, tokens[1:]...)
-	case "slli":
-		return assemblei(OpImm, Funct3Sll, tokens[1:]...)
 	case "slti":
 		return assemblei(OpImm, Funct3Slt, tokens[1:]...)
 	case "sltiu":
 		return assemblei(OpImm, Funct3Sltu, tokens[1:]...)
 	case "xori":
 		return assemblei(OpImm, Funct3Xor, tokens[1:]...)
-	case "srli", "srai": // TODO
-		return assemblei(OpImm, Funct3SrlSra, tokens[1:]...)
 	case "ori":
 		return assemblei(OpImm, Funct3Or, tokens[1:]...)
 	case "andi":
 		return assemblei(OpImm, Funct3Or, tokens[1:]...)
-	// pseudo functions
+	case "lui":
+		return assembleu(OpLui, tokens[1:]...)
+	case "auipc":
+		return assembleu(OpAuipc, tokens[1:]...)
+	// Immediate shifts
+	case "srli":
+		return assembleis(OpImm, Funct3Srl, Funct7Srl, tokens[1:]...)
+	case "srai":
+		return assembleis(OpImm, Funct3Sra, Funct7Sra, tokens[1:]...)
+	case "slli":
+		return assembleis(OpImm, Funct3Sll, Funct7Sll, tokens[1:]...)
+	// Pseudo instructions
 	case "nop":
 		if len(tokens) != 1 {
 			return 0, ErrWrongInstrunctionFormat
@@ -124,40 +173,16 @@ func parseCommand(tokens []string) (uint32, error) {
 			return 0, ErrWrongInstrunctionFormat
 		}
 		return assemblei(OpImm, Funct3Add, tokens[1], "zero", tokens[2])
+	case "j":
+		if len(tokens) != 2 {
+			return 0, ErrWrongInstrunctionFormat
+		}
+		return assemblej(OpJal, "zero", tokens[1])
 	default:
 		return 0, ErrUnknownInstruction
 	}
 }
 
-func assemblei(opcode OpCode, funct3 Funct3, args ...string) (uint32, error) {
-	if len(args) != 3 {
-		return 0, ErrWrongInstrunctionFormat
-	}
-	rd, ok := RegNames[args[0]]
-	if !ok {
-		return 0, ErrInvalidRegister
-	}
-	rs1, ok := RegNames[args[1]]
-	if !ok {
-		return 0, ErrInvalidRegister
-	}
-	immi, err := strconv.ParseInt(args[2], 10, 12)
-	if err != nil {
-		return 0, ErrInvalidNumeral
-	}
-	return iinstruction(OpImm, rd, Funct3Add, rs1, uint32(immi))
-}
-
-func iinstruction(opcode OpCode, rd Reg, funct3 Funct3, rs1 Reg, immi uint32) (uint32, error) {
-	return concat(
-		bitslice{immi, 12},
-		bitslice{uint32(rs1), 5},
-		bitslice{uint32(funct3), 3},
-		bitslice{uint32(rd), 5},
-		bitslice{uint32(opcode), 7},
-	)
-}
-
-func islabel(token string) bool {
+func issymbol(token string) bool {
 	return len(token) > 1 && token[len(token)-1] == ':'
 }

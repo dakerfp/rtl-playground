@@ -63,7 +63,7 @@ always @(posedge clk) begin
 	instruction <= mem[pc[4:0]];
 end
 
-task test_if_id;
+task test_if_id_ex;
 begin
 	mem[0] = {12'd42, 5'd0, `FUNCT3_ADD, 5'd5, `OP_IMM}; // li t0, 42
 	mem[4] = {12'd9, 5'd0, `FUNCT3_ADD, 5'd6, `OP_IMM}; // addi t1, zero, 9
@@ -91,7 +91,7 @@ end
 endtask
 
 initial begin
-	test_if_id;
+	test_if_id_ex;
 	success;
 end
 

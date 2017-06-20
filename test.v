@@ -1,6 +1,6 @@
 
-reg rst;
-reg clk;
+logic rst;
+logic clk;
 
 integer ticks;
 
@@ -23,9 +23,10 @@ begin
 end
 endtask
 
-task assert;
-input cond;
-input [127:0] msg;
+task assert_if(
+	input bit cond,
+	input string msg
+);
 begin
 	if (cond !== 1) begin
 		$display("[ FAIL ] %s", msg);

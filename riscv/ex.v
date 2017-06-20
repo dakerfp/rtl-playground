@@ -8,7 +8,7 @@ module riscv_ex(
 	input wire [REGA-1:0] rdi,
 	input wire [XLEN-1:0] a,
 	input wire [XLEN-1:0] b,
-	input wire [5:0] shamt,
+	input wire [SHAMTN-1:0] shamt,
 	input wire [2:0] funct3,
 	input wire invertb,
 
@@ -18,7 +18,9 @@ module riscv_ex(
 );
 
 parameter XLEN = 32;
-parameter REGA = 5; // REGN == 32
+parameter REGN = 32;
+parameter SHAMTN = $clog2(XLEN);
+parameter REGA = $clog2(REGN);
 
 // forward rd
 always @(posedge clk or posedge rst) begin

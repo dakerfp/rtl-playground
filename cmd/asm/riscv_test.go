@@ -109,8 +109,8 @@ load:
 		t.Fatal(obj.Sections)
 	}
 
-	if len(obj.Labels) != 1 {
-		t.Fatal(obj.Labels)
+	if len(obj.Symbols) != 1 {
+		t.Fatal(obj.Symbols)
 	}
 
 	text, ok := obj.Sections[".text"]
