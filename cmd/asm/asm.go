@@ -15,7 +15,22 @@ var (
 	ErrUnknownInstruction      = errors.New("unknown instruction")
 	ErrInvalidRegister         = errors.New("invalid register")
 	ErrInvalidNumeral          = errors.New("invalid number literal")
+	ErrSymbolRedefined         = errors.New("symbol redefined")
 )
+
+type ParseError struct {
+	Err     error
+	lineno  int
+	message string
+}
+
+func (pe *ParseError) Error() string {
+	return fmt.Sprintf("%s at line %d: %s", pe.Err.Error(), pe.lineno, pe.message)
+}
+
+func IsParseError(err error) bool {
+	return err.(*ParseError) != nil
+}
 
 type Section []uint32
 
@@ -33,7 +48,7 @@ type Object struct {
 
 func Parse(r io.Reader) (*Object, error) {
 	sr := bufio.NewReader(r)
-	lineno := 0
+	lineno := 1
 	instrno := 0
 	obj := &Object{
 		make(map[string]Symbol),
@@ -45,7 +60,7 @@ func Parse(r io.Reader) (*Object, error) {
 		if err == io.EOF {
 			break
 		} else if err != nil {
-			return nil, err
+			return obj, err
 		}
 
 		lineno++
@@ -65,7 +80,7 @@ func Parse(r io.Reader) (*Object, error) {
 		// try parsing label
 		if symbol, ok := parseSymbol(tokens[0]); ok {
 			if _, ok := obj.Symbols[symbol]; ok {
-				return nil, fmt.Errorf("symbol %q redefined at line %d", symbol, lineno)
+				return obj, &ParseError{ErrSymbolRedefined, lineno, line}
 			}
 			obj.Symbols[symbol] = Symbol{
 				Name:        symbol,
@@ -82,7 +97,7 @@ func Parse(r io.Reader) (*Object, error) {
 		}
 		cmd, err := parseCommand(tokens) // does not support large pseudo instructions
 		if err != nil {
-			return nil, fmt.Errorf("error on line %d: %q", lineno, err)
+			return obj, &ParseError{err, lineno, line}
 		}
 		obj.Sections[currsection] = append(obj.Sections[currsection], cmd)
 		instrno++
@@ -95,7 +110,7 @@ func Assemble(ie InstructionEncoder, o *Object) error {
 	for _, section := range o.Sections {
 		for _, instr := range section {
 			if err := ie.EncodeInstruction(instr); err != nil {
-				return err
+				return &ParseError{err, lineno, line}
 			}
 		}
 	}
@@ -198,7 +213,7 @@ func parseCommand(tokens []string) (uint32, error) {
 		}
 		return assemblej(OpJal, "zero", tokens[1])
 	default:
-		return 0, &ParseError{ErrUnknownInstruction, 0, tokens[0]}
+		return 0, ErrUnknownInstruction
 	}
 }
 
