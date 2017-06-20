@@ -1,7 +1,7 @@
 `include "riscv/if.v"
 `include "riscv/id.v"
 `include "riscv/ex.v"
-// `include "riscv/ma.v"
+`include "riscv/ma.v"
 `include "riscv/wb.v"
 
 module riscv_hart(
@@ -81,12 +81,21 @@ assign memfetch = ex_memfetch;
 
 wire ma_memfetch;
 wire [REGA-1:0] ma_rd;
-/*
+wire [XLEN-1:0] ma_result;
+
 riscv_ma rv_ma(
 	rst,
-	clk
+	clk,
+
+	0, // XXX
+	result,
+	ex_rd,
+	ex_memfetch,
+
+	ma_rd,
+	ma_result
 );
-*/
+
 wire write_on_zero;
 riscv_wb rv_wb(
 	rst,
