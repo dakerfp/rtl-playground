@@ -39,7 +39,7 @@ func Parse(r io.Reader) (*Object, error) {
 		make(map[string]Symbol),
 		make(map[string]Section),
 	}
-	currsection := ".text"
+	currsection := ".text" // default section is .text
 	for {
 		line, err := sr.ReadString('\n')
 		if err == io.EOF {
@@ -47,22 +47,21 @@ func Parse(r io.Reader) (*Object, error) {
 		} else if err != nil {
 			return nil, err
 		}
+
 		lineno++
-		line = line[0:strings.IndexAny(line, "#\n")]
-		line = strings.TrimSpace(line)
-		line = strings.Replace(line, ",", "", -1) // XXX
-		tokens := strings.Split(line, " ")
+		tokens := tokenize(line)
 
 		// check if it is a section
 		if len(tokens) == 2 && tokens[0] == ".section" {
 			currsection = tokens[1]
-			continue
+			continue // ignore the rest of the line
 		}
 
-		// read symbol, if there is any
+		// goto next line if line is empty
 		if len(tokens) == 0 {
 			continue
 		}
+
 		if symbol := tokens[0]; issymbol(symbol) {
 			tokens = tokens[1:]
 			if _, ok := obj.Symbols[symbol]; ok {
@@ -100,6 +99,13 @@ func Assemble(ie InstructionEncoder, o *Object) error {
 		}
 	}
 	return nil
+}
+
+func tokenize(line string) []string {
+	line = line[0:strings.IndexAny(line, "#\n")] // remove comments #
+	line = strings.TrimSpace(line)               // cleanup spaces
+	line = strings.Replace(line, ",", "", -1)    // XXX: ignoring "," order
+	return strings.Split(line, " ")              // tokenize
 }
 
 func parseCommand(tokens []string) (uint32, error) {
