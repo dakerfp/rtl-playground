@@ -29,28 +29,28 @@ riscv_ma rv_ma (
 task test_ma_basic;
 begin
 	reset;
-	assert(rd == 0, "reset ok");
-	assert(res == 0, "reset ok");
+	assert_if(rd == 0, "reset ok");
+	assert_if(res == 0, "reset ok");
 
 	// li t0, 42
 	memi = 'bx; rdi = 5; resi = 42; memfetch = 0;
 	tick;
-	assert(rd == 5, "rd = 5");
-	assert(res == 42, "res == 9");
+	assert_if(rd == 5, "rd = 5");
+	assert_if(res == 42, "res == 9");
 
 	// addi t1, zero, 9 == li t1, 9
 	// li t0, 42
 	memi = 'bx; rdi = 6; resi = 9; memfetch = 0;
 	tick;
-	assert(rd == 6, "rd = 5");
-	assert(res == 9, "res == 9");
+	assert_if(rd == 6, "rd = 5");
+	assert_if(res == 9, "res == 9");
 
 	// lui t2, 34 # mem[34] = 777
 	// li t0, 42
 	memi = 777; rdi = 7; resi = 'bx; memfetch = 1;
 	tick;
-	assert(rd == 7, "rd = 7");
-	assert(res == 777, "res == 9");
+	assert_if(rd == 7, "rd = 7");
+	assert_if(res == 777, "res == 9");
 end
 endtask
 
