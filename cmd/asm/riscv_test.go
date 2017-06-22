@@ -120,8 +120,12 @@ load:
 		t.Fatal(l)
 	}
 
-	li := text[0]
-	if bitmask(li, 0, 7) != uint32(OpCodeNames["li"]) {
+	li, err := text[0].Link()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if bitmask(li, 0, 7) != uint32(OpImm) {
 		t.Fatal("wrong opcode: ", bitmask(li, 0, 6))
 	}
 
@@ -134,7 +138,7 @@ load:
 	}
 
 	if imm := bitmask(li, 20, 32) >> 20; imm != uint32(42) {
-		t.Fatal("wrong immm: ", imm)
+		t.Fatal("wrong immi: ", imm)
 	}
 
 	if li != 44040851 {

@@ -93,8 +93,3 @@ var RegNames = map[string]Reg{
 	"x30": Reg(30), "t5": Reg(30),
 	"x31": Reg(31), "t6": Reg(31),
 }
-
-var OpCodeNames = map[string]OpCode{
-	"li":   OpImm,
-	"addi": OpImm,
-}

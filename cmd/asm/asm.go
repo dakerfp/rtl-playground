@@ -32,7 +32,7 @@ func IsParseError(err error) bool {
 	return err.(*ParseError) != nil
 }
 
-type Section []uint32
+type Section []Instruction
 
 type Symbol struct {
 	Name        string
@@ -109,7 +109,11 @@ func Parse(r io.Reader) (*Object, error) {
 func Assemble(ie InstructionEncoder, o *Object) error {
 	for _, section := range o.Sections {
 		for _, instr := range section {
-			if err := ie.EncodeInstruction(instr); err != nil {
+			ui, err := instr.Link()
+			if err != nil {
+				return err
+			}
+			if err := ie.EncodeInstruction(ui); err != nil {
 				return err
 			}
 		}
@@ -124,117 +128,117 @@ func tokenize(line string) []string {
 	return strings.Split(line, " ")              // tokenize
 }
 
-func parseCommand(tokens []string) (uint32, error) {
+func parseCommand(tokens []string) (Instruction, error) {
 	switch tokens[0] {
 	// Inconditional branches
 	case "jal":
-		return assemblej(OpJal, tokens[1:]...)
+		return parseInstructionJ(OpJal, tokens[1:]...)
 	case "jalr":
-		return assemblei(OpJalr, Funct3Add, tokens[1:]...)
+		return parseInstructionI(OpJalr, Funct3Add, tokens[1:]...)
 	// Conditional branches
 	case "beq":
-		return assembleb(OpBranch, Funct3Beq, tokens[1:]...)
+		return parseInstructionB(OpBranch, Funct3Beq, tokens[1:]...)
 	case "bne":
-		return assembleb(OpBranch, Funct3Bne, tokens[1:]...)
+		return parseInstructionB(OpBranch, Funct3Bne, tokens[1:]...)
 	case "blt":
-		return assembleb(OpBranch, Funct3Blt, tokens[1:]...)
+		return parseInstructionB(OpBranch, Funct3Blt, tokens[1:]...)
 	case "bge":
-		return assembleb(OpBranch, Funct3Bge, tokens[1:]...)
+		return parseInstructionB(OpBranch, Funct3Bge, tokens[1:]...)
 	case "bltu":
-		return assembleb(OpBranch, Funct3Bltu, tokens[1:]...)
+		return parseInstructionB(OpBranch, Funct3Bltu, tokens[1:]...)
 	case "bgeu":
-		return assembleb(OpBranch, Funct3Bgeu, tokens[1:]...)
+		return parseInstructionB(OpBranch, Funct3Bgeu, tokens[1:]...)
 	// Register operations
 	case "add":
-		return assembler(Op, Funct3Add, Funct7Add, tokens[1:]...)
+		return parseInstructionR(Op, Funct3Add, Funct7Add, tokens[1:]...)
 	case "slt":
-		return assembler(Op, Funct3Slt, Funct7None, tokens[1:]...)
+		return parseInstructionR(Op, Funct3Slt, Funct7None, tokens[1:]...)
 	case "sltu":
-		return assembler(Op, Funct3Sltu, Funct7None, tokens[1:]...)
+		return parseInstructionR(Op, Funct3Sltu, Funct7None, tokens[1:]...)
 	case "and":
-		return assembler(Op, Funct3And, Funct7None, tokens[1:]...)
+		return parseInstructionR(Op, Funct3And, Funct7None, tokens[1:]...)
 	case "or":
-		return assembler(Op, Funct3Or, Funct7None, tokens[1:]...)
+		return parseInstructionR(Op, Funct3Or, Funct7None, tokens[1:]...)
 	case "xor":
-		return assembler(Op, Funct3Xor, Funct7None, tokens[1:]...)
+		return parseInstructionR(Op, Funct3Xor, Funct7None, tokens[1:]...)
 	// Register shift operation
 	case "sll":
-		return assembler(Op, Funct3Sll, Funct7Sll, tokens[1:]...)
+		return parseInstructionR(Op, Funct3Sll, Funct7Sll, tokens[1:]...)
 	case "srl":
-		return assembler(Op, Funct3Srl, Funct7Srl, tokens[1:]...)
+		return parseInstructionR(Op, Funct3Srl, Funct7Srl, tokens[1:]...)
 	case "sra":
-		return assembler(Op, Funct3Sra, Funct7Sra, tokens[1:]...)
+		return parseInstructionR(Op, Funct3Sra, Funct7Sra, tokens[1:]...)
 	// Register sub operation
 	case "sub":
-		return assembler(Op, Funct3Add, Funct7Sub, tokens[1:]...)
+		return parseInstructionR(Op, Funct3Add, Funct7Sub, tokens[1:]...)
 	// Immediate operations
 	case "addi":
-		return assemblei(OpImm, Funct3Add, tokens[1:]...)
+		return parseInstructionI(OpImm, Funct3Add, tokens[1:]...)
 	case "slti":
-		return assemblei(OpImm, Funct3Slt, tokens[1:]...)
+		return parseInstructionI(OpImm, Funct3Slt, tokens[1:]...)
 	case "sltiu":
-		return assemblei(OpImm, Funct3Sltu, tokens[1:]...)
+		return parseInstructionI(OpImm, Funct3Sltu, tokens[1:]...)
 	case "xori":
-		return assemblei(OpImm, Funct3Xor, tokens[1:]...)
+		return parseInstructionI(OpImm, Funct3Xor, tokens[1:]...)
 	case "ori":
-		return assemblei(OpImm, Funct3Or, tokens[1:]...)
+		return parseInstructionI(OpImm, Funct3Or, tokens[1:]...)
 	case "andi":
-		return assemblei(OpImm, Funct3Or, tokens[1:]...)
+		return parseInstructionI(OpImm, Funct3Or, tokens[1:]...)
 	case "lui":
-		return assembleu(OpLui, tokens[1:]...)
+		return parseInstructionU(OpLui, tokens[1:]...)
 	case "auipc":
-		return assembleu(OpAuipc, tokens[1:]...)
+		return parseInstructionU(OpAuipc, tokens[1:]...)
 	// Immediate shifts
 	case "srli":
-		return assembleis(OpImm, Funct3Srl, Funct7Srl, tokens[1:]...)
+		return parseInstructionIS(OpImm, Funct3Srl, Funct7Srl, tokens[1:]...)
 	case "srai":
-		return assembleis(OpImm, Funct3Sra, Funct7Sra, tokens[1:]...)
+		return parseInstructionIS(OpImm, Funct3Sra, Funct7Sra, tokens[1:]...)
 	case "slli":
-		return assembleis(OpImm, Funct3Sll, Funct7Sll, tokens[1:]...)
+		return parseInstructionIS(OpImm, Funct3Sll, Funct7Sll, tokens[1:]...)
 	// Load
 	case "lb":
-		return assemblei(OpLoad, Funct3LoadB, tokens[1:]...)
+		return parseInstructionI(OpLoad, Funct3LoadB, tokens[1:]...)
 	case "lbu":
-		return assemblei(OpLoad, Funct3LoadBU, tokens[1:]...)
+		return parseInstructionI(OpLoad, Funct3LoadBU, tokens[1:]...)
 	case "lh":
-		return assemblei(OpLoad, Funct3LoadH, tokens[1:]...)
+		return parseInstructionI(OpLoad, Funct3LoadH, tokens[1:]...)
 	case "lhu":
-		return assemblei(OpLoad, Funct3LoadHU, tokens[1:]...)
+		return parseInstructionI(OpLoad, Funct3LoadHU, tokens[1:]...)
 	case "lw":
-		return assemblei(OpLoad, Funct3LoadW, tokens[1:]...)
+		return parseInstructionI(OpLoad, Funct3LoadW, tokens[1:]...)
 	// Store
 	case "sb":
-		return assembles(OpStore, Funct3StoreB, tokens[1:]...)
+		return parseInstructionS(OpStore, Funct3StoreB, tokens[1:]...)
 	case "sh":
-		return assembles(OpStore, Funct3StoreH, tokens[1:]...)
+		return parseInstructionS(OpStore, Funct3StoreH, tokens[1:]...)
 	case "sw":
-		return assembles(OpStore, Funct3StoreW, tokens[1:]...)
+		return parseInstructionS(OpStore, Funct3StoreW, tokens[1:]...)
 	// Pseudo instructions
 	case "nop":
 		if len(tokens) != 1 {
-			return 0, ErrWrongInstrunctionFormat
+			return nil, ErrWrongInstrunctionFormat
 		}
-		return assemblei(OpImm, Funct3Add, "zero", "zero", "0")
+		return parseInstructionI(OpImm, Funct3Add, "zero", "zero", "0")
 	case "mv":
 		if len(tokens) != 3 {
-			return 0, ErrWrongInstrunctionFormat
+			return nil, ErrWrongInstrunctionFormat
 		}
-		return assemblei(OpImm, Funct3Add, tokens[1], tokens[2], "0")
+		return parseInstructionI(OpImm, Funct3Add, tokens[1], tokens[2], "0")
 	case "li":
 		if len(tokens) != 3 {
-			return 0, ErrWrongInstrunctionFormat
+			return nil, ErrWrongInstrunctionFormat
 		}
-		return assemblei(OpImm, Funct3Add, tokens[1], "zero", tokens[2])
+		return parseInstructionI(OpImm, Funct3Add, tokens[1], "zero", tokens[2])
 	case "j":
 		if len(tokens) != 2 {
-			return 0, ErrWrongInstrunctionFormat
+			return nil, ErrWrongInstrunctionFormat
 		}
-		return assemblej(OpJal, "zero", tokens[1])
+		return parseInstructionJ(OpJal, "zero", tokens[1])
 	case "fence", "fence.i", "ecall", "ebreak", "csrrw", "csrrs", "csrrc",
 		"csrrwi", "csrrsi", "csrrci":
-		return 0, ErrNotImplemented
+		return nil, ErrNotImplemented
 	default:
-		return 0, ErrUnknownInstruction
+		return nil, ErrUnknownInstruction
 	}
 }
 
