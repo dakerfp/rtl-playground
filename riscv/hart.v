@@ -4,110 +4,88 @@
 `include "riscv/ma.v"
 `include "riscv/wb.v"
 
-module riscv_hart(
-	input rst,
-	input clk,
+module riscv_hart
 
-	input [XLEN-1:0] instruction,
-	input [XLEN-1:0] memread,
+	#(parameter XLEN = 32,
+	  parameter REGN = 32)
 
-	output [XLEN-1:0] instruction_addr,
-	output [XLEN-1:0] mem_addr,
-	output memfetch
-);
+	(input logic rst, clk,
 
-parameter XLEN = 32;
-parameter SHAMTN = $clog2(XLEN);
-parameter REGN = 32;
-parameter REGA = $clog2(REGN);
+	 input logic [XLEN-1:0] instruction,
+	 input logic [XLEN-1:0] memread,
 
-wire [XLEN-1:0] regs [REGN-1:0];
-wire [XLEN-1:0] pc;
+	 output logic [XLEN-1:0] instruction_addr,
+	 output logic [XLEN-1:0] mem_addr,
+	 output logic memfetch);
 
-riscv_if #(.XLEN(XLEN)) rv_if(
-	rst,
-	clk,
-	1'b0, // XXX: no bubbles!
+	localparam SHAMTN = $clog2(XLEN);
+	localparam REGA = $clog2(REGN);
 
-	pc
-);
-assign instruction_addr = pc;
+	logic [XLEN-1:0] regs [REGN-1:0];
+	logic [XLEN-1:0] pc;
 
-wire [REGA-1:0] id_rd;
-wire [XLEN-1:0] a;
-wire [XLEN-1:0] b;
-wire [2:0] funct3;
-wire id_exception;
-wire [SHAMTN-1:0] shamt; // XXX
-wire invertb; // XXX
+	riscv_if #(.XLEN(XLEN)) rv_if(
+		rst, clk,
 
-riscv_id #(.XLEN(XLEN),.REGN(REGN)) rv_id(
-	rst,
-	clk,
+		1'b0, // XXX: no bubbles!
 
-	regs,
-	instruction,
-	pc,
+		pc
+	);
 
-	id_rd,
-	a,
-	b,
-	funct3,
-	id_exception
-);
+	assign instruction_addr = pc;
 
-wire [XLEN-1:0] result;
-wire [REGA-1:0] ex_rd;
-wire ex_memfetch;
+	logic [REGA-1:0] id_rd;
+	logic [XLEN-1:0] a;
+	logic [XLEN-1:0] b;
+	logic [2:0] funct3;
+	logic id_exception;
+	logic [SHAMTN-1:0] shamt; // XXX
+	logic invertb; // XXX
 
-riscv_ex #(.XLEN(XLEN),.REGN(REGN)) rv_ex(
-	rst,
-	clk,
+	riscv_id #(.XLEN(XLEN),.REGN(REGN)) rv_id(
+		rst, clk,
 
-	id_rd,
-	a,
-	b,
-	shamt,
-	funct3,
-	invertb,
+		regs, instruction, pc,
 
-	result,
-	ex_rd,
-	ex_memfetch
-);
-assign mem_addr = result;
-assign memfetch = ex_memfetch;
+		id_rd, a, b, funct3, id_exception
+	);
+
+	logic [XLEN-1:0] result;
+	logic [REGA-1:0] ex_rd;
+	logic ex_memfetch;
+
+	riscv_ex #(.XLEN(XLEN),.REGN(REGN)) rv_ex(
+		rst, clk,
+
+		id_rd, a, b, shamt, funct3, invertb,
+
+		result, ex_rd, ex_memfetch
+	);
+	assign mem_addr = result;
+	assign memfetch = ex_memfetch;
 
 
-wire ma_memfetch;
-wire [REGA-1:0] ma_rd;
-wire [XLEN-1:0] ma_result;
+	logic ma_memfetch;
+	logic [REGA-1:0] ma_rd;
+	logic [XLEN-1:0] ma_result;
 
-riscv_ma rv_ma(
-	rst,
-	clk,
+	riscv_ma rv_ma(
+		rst, clk,
 
-	0, // XXX
-	result,
-	ex_rd,
-	ex_memfetch,
+		0, // XXX
+		result, ex_rd, ex_memfetch,
 
-	ma_rd,
-	ma_result
-);
+		ma_rd, ma_result
+	);
 
-wire write_on_zero;
-riscv_wb rv_wb(
-	rst,
-	clk,
+	logic write_on_zero;
+	riscv_wb rv_wb(
+		rst,
+		clk,
 
-	result,
-	memread,
-	memfetch,
-	ma_rd,
+		result, memread, memfetch, ma_rd,
 
-	regs,
-	write_on_zero
-);
+		regs, write_on_zero
+	);
 
-endmodule
+endmodule : riscv_hart
