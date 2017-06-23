@@ -1,21 +1,19 @@
 
-module riscv_if(
-	input wire rst,
-	input wire clk,
-	input wire bubble,
+module riscv_if
 
-	output reg [XLEN-1:0] pc
-);
+	#(parameter XLEN = 32)
 
-parameter XLEN = 32;
+	(input logic rst, clk,
 
-always @(posedge clk or posedge rst) begin
-	if (rst) begin
-		pc <= 0;
-	end
-	else if (clk) begin
-		if (~bubble) pc <= pc + 4;
-	end
-end
+	 input logic bubble,
 
-endmodule
+	 output logic [XLEN-1:0] pc);
+
+	always @(posedge clk or posedge rst)
+		if (rst)
+			pc <= 0;
+		else if (clk)
+			if (~bubble)
+				pc <= pc + 4;
+
+endmodule : riscv_if

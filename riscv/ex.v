@@ -1,41 +1,38 @@
 
 `include "riscv/isa.v"
 
-module riscv_ex(
-	input wire rst,
-	input wire clk,
+module riscv_ex
 
-	input wire [REGA-1:0] rdi,
-	input wire [XLEN-1:0] a,
-	input wire [XLEN-1:0] b,
-	input wire [SHAMTN-1:0] shamt,
-	input wire [2:0] funct3,
-	input wire invertb,
+	#(parameter XLEN = 32,
+	  parameter REGN = 32)
 
-	output reg [XLEN-1:0] result,
-	output reg [REGA-1:0] rd,
-	output reg memfetch
-);
+	(input logic rst, clk,
 
-parameter XLEN = 32;
-parameter REGN = 32;
-parameter SHAMTN = $clog2(XLEN);
-parameter REGA = $clog2(REGN);
+	input logic [REGA-1:0] rdi,
+	input logic [XLEN-1:0] a, b,
+	input logic [SHAMTN-1:0] shamt,
+	input logic [2:0] funct3,
+	input logic invertb,
 
-// forward rd
-always @(posedge clk or posedge rst) begin
-	if (rst)
-		rd <= 0;
-	else if (clk)
-		rd <= rdi;
-end
+	output logic [XLEN-1:0] result,
+	output logic [REGA-1:0] rd,
+	output logic memfetch);
 
-// ALU
-always @(posedge clk or posedge rst) begin
-	if (rst)
-		result <= 0;
-	else if (clk) begin
-		case (funct3)
+	localparam SHAMTN = $clog2(XLEN);
+	localparam REGA = $clog2(REGN);
+
+	// forward rd
+	always @(posedge clk or posedge rst)
+		if (rst)
+			rd <= 0;
+		else if (clk)
+			rd <= rdi;
+
+	// ALU
+	always @(posedge clk or posedge rst)
+		if (rst)
+			result <= 0;
+		else if (clk) case (funct3)
 		`FUNCT3_ADD: result <= $signed(a) + $signed(b);
 		`FUNCT3_SLL: result <= a << shamt;
 		`FUNCT3_SLT: result <= $signed(a) < $signed(b);
@@ -47,14 +44,10 @@ always @(posedge clk or posedge rst) begin
 		`FUNCT3_OR: result <= a | b;
 		`FUNCT3_AND: result <= a & b;
 		endcase
-	end
-end
 
-// Memory fetch
-always @(posedge clk or posedge rst) begin
-	if (rst) begin
-		memfetch <= 0;
-	end
-end
+	// Memory fetch
+	always @(posedge clk or posedge rst)
+		if (rst)
+			memfetch <= 0; // XXX: todo memfetch case
 
-endmodule
+endmodule : riscv_ex
