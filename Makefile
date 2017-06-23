@@ -25,9 +25,14 @@ testunittb: mem.tb alu.tb riscv/if.tb riscv/id.tb riscv/ex.tb riscv/ma.tb riscv/
 
 testinttb: riscv/id_if.tb riscv/id_if_ex.tb riscv/hart.tb
 
-testmisc: misc/pwm.tb misc/tracker.tb
+testmisc: misc/pwm.tb misc/tracker.tb misc/mem.tb
 
 %.tb: %_tb.v
+	@$(VC) $(VFLAGS) $^ -o $@
+	@./$@ > $TMPOUTPUT && echo "[" $*_test "]: OK" || echo "[" $*_test "]: FAIL" && cat $TMPOUTPUT
+	@rm $@
+
+%.tb: %_tb.sv
 	@$(VC) $(VFLAGS) $^ -o $@
 	@./$@ > $TMPOUTPUT && echo "[" $*_test "]: OK" || echo "[" $*_test "]: FAIL" && cat $TMPOUTPUT
 	@rm $@
