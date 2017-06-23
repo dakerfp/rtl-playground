@@ -19,6 +19,10 @@ module mem_tb;
 		read_addr = 4;
 		tick;
 		if (read_data != 42) $error;
+		write_data = 31;
+		tick;
+		tick;
+		if (read_data != 31) $error;
 	endtask : test_write_read
 
 	task test_write_read_simul;
@@ -26,6 +30,8 @@ module mem_tb;
 		write_addr = 4;
 		write_data = 42;
 		read_addr = 4;
+		tick;
+		if (read_data != 'bx) $error;
 		tick;
 		if (read_data != 42) $error;
 	endtask : test_write_read_simul
