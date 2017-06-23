@@ -1,42 +1,26 @@
 
-module pwm(
-	input rst,
-	input clk,
+module pwm
+	#(parameter XLEN=8,
+	  FREQ=1024)
 
-	input [XLEN-1:0] ampl,
-	input [XLEN:0] duty_cycle,
+	(input logic rst, clk,
 
-	output reg signal
-);
+	 input logic [XLEN-1:0] ampl,
+	 input logic [XLEN:0] duty_cycle,
 
-parameter XLEN = 8;
-parameter FREQ = 4000000; // clocks / second
+	 output logic signal);
 
-reg [XLEN:0] i;
-always @(posedge clk or posedge rst) begin
-	if (rst) begin
-		i <= 1;
-	end
-	else if (clk) begin
-		if (i == duty_cycle)
+	logic [XLEN:0] i;
+	always @(posedge clk or posedge rst)
+		if (rst)
 			i <= 1;
-		else
-			i <= i + 1;
-	end
-end
+		else if (clk)
+			i <= (i == duty_cycle) ? 1 : i + 1;
 
-always @(posedge clk or posedge rst) begin
-	if (rst) begin
-		signal <= 0;
-	end
-	else if (clk) begin
-		if (i <= ampl)
-			signal <= 1;
-		else
+	always @(posedge clk or posedge rst)
+		if (rst)
 			signal <= 0;
+		else if (clk)
+			signal <= (i <= ampl) ? 1 : 0;
 
-	end
-end
-
-endmodule
-
+endmodule : pwm

@@ -1,79 +1,77 @@
-`define INSTR_SIN 2'd0
-`define INSTR_SQUARE 2'd1
-`define INSTR_SAW 2'd2
-`define INSTR_RAND 2'd3
 
-`define EFF_NONE 3'd0
-`define EFF_SLIDE 3'd1
-`define EFF_VIBRATO 3'd2
-`define EFF_DROP 3'd3
-`define EFF_FADE_IN 3'd4
-`define EFF_FADE_OUT 3'd5
-`define EFF_FAST_ARPEGGIO 3'd6
-`define EFF_SLOW_ARPEGGIO 3'd7
+typedef enum {
+	INSTR_SIN,
+	INSTR_SQUARE,
+	INSTR_SAW,
+	INSTR_RAND
+} instrument_t;
+
+typedef enum {
+	EFF_NONE,
+	EFF_SLIDE,
+	EFF_VIBRATO,
+	EFF_DROP,
+	EFF_FADE_IN,
+	EFF_FADE_OUT,
+	EFF_FAST_ARPEGGIO,
+	EFF_SLOW_ARPEGGIO
+} effect_t;
 
 typedef struct packed {
-	bit [2:0] tone;
-	bit [2:0] octave;
-	bit [1:0] instrument;
-	bit [4:0] volume;
-	bit [2:0] effect;
+	logic [2:0] tone;
+	logic [2:0] octave;
+	instrument_t instrument;
+	logic [4:0] volume;
+	effect_t [2:0] effect;
 } note_tp;
 
-module tracker(
-	input rst,
-	input clk,
+module tracker
 
-	input note_tp note,
+	#(parameter PERIOD = 256,
+	  parameter MAXAMPLITUDE = 256,
+	  parameter MAXSPEED = 16)
 
-	input [SPLEN-1:0] speed,
-	output reg [AMPLEN-1:0] amplitude
-);
+	(input logic rst, clk,
 
-parameter PERIOD = 256;
-parameter TLEN = $clog2(PERIOD);
-parameter MAXAMPLITUDE = 256;
-parameter AMPLEN = $clog2(MAXAMPLITUDE);
-parameter MAXSPEED = 16;
-parameter SPLEN = $clog2(MAXSPEED);
-parameter MAXVOLUME = 1 << 5;
+	 input note_tp note,
+	 input logic [SPLEN-1:0] speed,
 
-`include "misc/sinlut.v"
-`include "misc/randlut.v"
+	 output logic [AMPLEN-1:0] amplitude);
 
-function [AMPLEN-1:0] square;
-input [TLEN-1:0] t;
-begin
-	if (t < (PERIOD / 2))
-		square = 0;
-	else
-		square = MAXAMPLITUDE - 1;
-end
-endfunction
+	localparam TLEN = $clog2(PERIOD);
+	localparam AMPLEN = $clog2(MAXAMPLITUDE);
+	localparam SPLEN = $clog2(MAXSPEED);
+ 	localparam MAXVOLUME = 1 << 5;
 
-function [AMPLEN-1:0] wave;
-input [TLEN-1:0] t;
-input [1:0] instrument;
-case (instrument)
-	`INSTR_SIN: wave = sinlut(t);
-	`INSTR_SQUARE: wave = square(t);
-	`INSTR_SAW: wave = t;
-	`INSTR_RAND: wave = randlut(t);
-endcase
-endfunction
+	`include "misc/sinlut.v"
+	`include "misc/randlut.v"
 
-reg [TLEN-1:0] t;
-always @(posedge rst or posedge clk) begin
-	if (rst) begin
-		t <= 0;
+	function [AMPLEN-1:0] square;
+	input [TLEN-1:0] t;
+	begin
+		square = (t < (PERIOD / 2)) ? 0 : MAXAMPLITUDE - 1;
 	end
-	else if (clk) begin
-		t <= t + speed;
-	end
-end
+	endfunction
 
-always @(posedge clk) begin
-	amplitude <= wave(t, note.instrument);
-end
+	function [AMPLEN-1:0] wave;
+	input [TLEN-1:0] t;
+	input instrument;
+		case (instrument)
+		INSTR_SIN: wave = sinlut(t);
+		INSTR_SQUARE: wave = square(t);
+		INSTR_SAW: wave = t;
+		INSTR_RAND: wave = randlut(t);
+		endcase
+	endfunction
 
-endmodule
+	logic [TLEN-1:0] t;
+	always @(posedge rst or posedge clk)
+		if (rst)
+			t <= 0;
+		else if (clk)
+			t <= t + speed;
+
+	always @(posedge clk)
+		amplitude <= wave(t, note.instrument);
+
+endmodule : tracker
