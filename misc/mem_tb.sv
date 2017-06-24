@@ -27,18 +27,41 @@ module mem_tb;
 
 	task test_write_read_simul;
 		reset;
-		write_addr = 4;
+		write_addr = 20;
 		write_data = 42;
-		read_addr = 4;
+		read_addr = 20;
 		tick;
 		if (read_data != 'bx) $error;
 		tick;
 		if (read_data != 42) $error;
 	endtask : test_write_read_simul
 
+	task test_write_read_diff;
+		reset;
+		write_addr = 8;
+		write_data = 33;
+		tick;
+		write_addr = 12;
+		write_data = 99;
+		tick;
+		write_addr = 16;
+		write_data = 66;
+		read_addr = 12;
+		tick;
+		if (read_data != 99) $error;
+		read_addr = 16;
+		tick;
+		if (read_data != 66) $error;
+		read_addr = 8;
+		tick;
+		if (read_data != 33) $error;
+		tick;
+	endtask : test_write_read_diff
+
 	initial begin
 		test_write_read;
 		test_write_read_simul;
+		test_write_read_diff;
 		$finish;
 	end
 
