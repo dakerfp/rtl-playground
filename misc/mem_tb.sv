@@ -4,6 +4,7 @@
 module mem_tb;
 	`include "test.v"
 
+	logic write;
 	logic [7:0] write_addr;
 	logic [31:0] write_data;
 	logic [7:0] read_addr;
@@ -11,8 +12,25 @@ module mem_tb;
 
 	mem #(32,256) dut(.*);
 
+	task test_write_no_write;
+		reset;
+		write = 0;
+		write_addr = 4;
+		write_data = 42;
+		tick;
+		read_addr = 4;
+		tick;
+		if (read_data == 42) $error;
+		write_data = 31;
+		write = 1;
+		tick;
+		tick;
+		if (read_data != 31) $error;
+	endtask : test_write_no_write
+
 	task test_write_read;
 		reset;
+		write = 1;
 		write_addr = 4;
 		write_data = 42;
 		tick;
@@ -27,6 +45,7 @@ module mem_tb;
 
 	task test_write_read_simul;
 		reset;
+		write = 1;
 		write_addr = 20;
 		write_data = 42;
 		read_addr = 20;
@@ -38,6 +57,7 @@ module mem_tb;
 
 	task test_write_read_diff;
 		reset;
+		write = 1;
 		write_addr = 8;
 		write_data = 33;
 		tick;
@@ -59,6 +79,7 @@ module mem_tb;
 	endtask : test_write_read_diff
 
 	initial begin
+		test_write_no_write;
 		test_write_read;
 		test_write_read_simul;
 		test_write_read_diff;
