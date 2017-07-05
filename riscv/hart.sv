@@ -1,0 +1,204 @@
+
+`include "riscv/isa.sv"
+
+module riscv_hart
+
+	#(parameter XLEN = 32,
+	  parameter REGN = 32)
+
+	(input logic rst, clk,
+
+	 input instruction_t instruction,
+	 output logic [XLEN-1:0] pc,
+
+	 input logic [XLEN-1:0] mem_read,
+	 output logic [XLEN-1:0] mem_addr, mem_data,
+	 output logic mem_write); 
+
+	localparam SHAMTN = $clog2(XLEN);
+	localparam REGA = $clog2(REGN);
+	
+	// IF - Instruction Fetch
+
+	always @(posedge clk or posedge rst)
+		if (rst)
+			pc <= 0;
+		else if (clk)
+			pc <= pc + 4; // TODO: support branch and jump
+
+	// ID - Instruction Decode
+
+	logic [XLEN-1:0] regs [0:REGN-1];// XXX: should be internal only, exporting only for testing
+	logic [XLEN-1:0] immediate;
+
+	instruction_r_t id_r;
+	instruction_i_t id_i;
+	instruction_u_t id_u;
+	instruction_j_t id_j;
+	instruction_s_t id_s;
+	instruction_b_t id_b;
+	instruction_format_t id_format;
+	assign id_format = instruction.f;
+	assign id_r = id_format.r;
+	assign id_i = id_format.i;
+	assign id_u = id_format.u;
+	assign id_s = id_format.s;
+	assign id_b = id_format.b;
+
+	always @* // always_comb
+		case (instruction.opcode)
+		OP_LUI, OP_AUIPC:
+			immediate = $signed(id_u.immu); // sign extend
+		OP_IMM, OP_JALR, OP_LOAD, OP_MISC_MEM:
+			immediate = $signed(id_i.immi); // sign extend
+		OP_JAL:
+			immediate = $signed({id_j.immj3, id_j.immj2, id_j.immj1, id_j.immj0});
+		OP_STORE:
+			immediate = $signed({id_s.imms1, id_s.imms0});
+		OP_BRANCH:
+			immediate = $signed({id_b.imms3, id_b.immb2, id_b.immb1, id_b.immb0, 1'b0}); // << 1
+		default: // OP
+			immediate = 0;
+		endcase	
+
+	always @(posedge clk or posedge rst) // always_ff
+		if (rst) begin
+			EX.left <= 0;
+			EX.right <= 0;
+			EX.funct3 <= FUNCT3_ADD;
+			EX.rd <= 0;
+		end
+		else case (instruction.opcode)
+		OP_LUI: begin
+			EX.left <= immediate;
+			EX.right <= 0;
+			EX.funct3 <= FUNCT3_ADD;
+			EX.rd <= id_u.rd;
+		end
+		OP_JAL: begin
+			EX.left <= pc;
+			EX.right <= 4;
+			EX.funct3 <= FUNCT3_ADD;
+			EX.rd <= id_j.rd;
+		end
+		OP_AUIPC: begin
+			EX.left <= pc;
+			EX.right <= immediate;
+			EX.funct3 <= FUNCT3_ADD;
+			EX.rd <= id_u.rd;
+		end
+		OP_JALR: begin
+			EX.left <= pc;
+			EX.right <= 4;
+			EX.funct3 <= id_i.funct3;
+			EX.rd <= id_i.rd;
+		end
+		OP: begin
+			EX.left <= regs[id_r.rs1];
+			EX.right <= regs[id_r.rs2];
+			EX.funct3 <= id_r.funct3;
+			EX.rd <= id_r.rd;
+		end
+		OP_IMM: begin
+			EX.left <= regs[id_i.rs1];
+			EX.right <= immediate;
+			EX.funct3 <= id_i.funct3;
+			EX.rd <= id_i.rd;
+		end
+		OP_BRANCH: begin
+			// OP_BRANCH does not propagate through the pipeline
+			EX.left <= 0;
+			EX.right <= 0;
+			EX.funct3 <= FUNCT3_ADD;
+			EX.rd <= 0;
+		end
+		OP_LOAD: begin
+			EX.left <= regs[id_i.rs1];
+			EX.right <= immediate;
+			EX.funct3 <= id_i.funct3;
+			EX.rd <= id_i.rd;
+		end
+		OP_STORE: begin
+			EX.left <= regs[id_s.rs1];
+			EX.right <= immediate;
+			EX.funct3 <= id_s.funct3;
+			EX.rd <= 0;
+			// TODO
+		end
+		OP_MISC_MEM: begin
+			EX.funct3 <= id_i.funct3;
+			EX.rd <= id_i.rd;
+			$display("Not implemented"); // XXX
+		end
+		OP_SYSTEM: begin
+			EX.funct3 <= id_i.funct3;
+			EX.rd <= id_i.rd;
+			$display("Not implemented"); // XXX
+		end
+		default: begin
+			EX.left <= 0;
+			EX.right <= 0;
+			EX.funct3 <= FUNCT3_ADD;
+		end
+		endcase
+
+
+	// EX - Execution
+
+	struct packed {
+		logic [XLEN-1:0] left;
+		logic [XLEN-1:0] right;
+		logic [SHAMTN-1:0] shamt;
+		funct3_t funct3;
+		logic invert;
+		reg_t rd;
+	} EX;
+
+	always @(posedge clk or posedge rst)  // always_ff
+		if (rst)
+			MA.result <= 0;
+		else case (EX.funct3)
+		FUNCT3_ADD:
+			MA.result <= $signed(EX.left) + $signed(EX.right);
+	 	FUNCT3_SLL:
+	 		MA.result <= EX.left << EX.shamt;
+		FUNCT3_SLT:
+			MA.result <= $signed(EX.left) < $signed(EX.right);
+		FUNCT3_SLTU:
+			MA.result <= EX.left < EX.right;
+		FUNCT3_XOR:
+			MA.result <= EX.left ^ EX.right;
+		FUNCT3_SRL_SRA:
+			if (EX.invert)
+				MA.result <= $signed(EX.left) >>> EX.shamt;
+			else
+				MA.result <= EX.left >> EX.shamt;
+		FUNCT3_OR:
+			MA.result <= EX.left | EX.right;
+		FUNCT3_AND:
+			MA.result <= EX.left & EX.right;
+		default:
+			MA.result <= 0;
+		endcase
+
+	always @(posedge clk or posedge rst)  // always_ff
+		if (rst)
+			MA.bypass <= 0;
+		else
+			MA.bypass <= EX.right;
+
+	always @(posedge clk or posedge rst)  // always_ff
+		if (rst)
+			MA.rd <= 0;
+		else
+			MA.rd <= EX.rd;
+
+	// MA - Memory Access
+	struct packed {
+		logic [XLEN-1:0] result;
+		logic [XLEN-1:0] bypass;
+		logic mem_write;
+		reg_t rd;
+	} MA;
+
+endmodule : riscv_hart
