@@ -23,9 +23,12 @@ testtb: testunittb testinttb
 
 testunittb: alu.tb riscv/if.tb riscv/id.tb riscv/ex.tb riscv/ma.tb riscv/wb.tb
 
-testinttb: riscv/id_if.tb riscv/id_if_ex.tb riscv/hart.tb
+testinttb: riscv/id_if.tb riscv/id_if_ex.tb
 
 testmisc: misc/pwm.tb misc/tracker.tb misc/mem.tb misc/display.tb
+
+# XXX
+testhart: riscv/hart.tb
 
 %.tb: %_tb.v
 	@$(VC) $(VFLAGS) $^ -o $@
