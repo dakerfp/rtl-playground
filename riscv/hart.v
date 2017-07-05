@@ -18,7 +18,7 @@ module riscv_hart
 
 	 output logic [XLEN-1:0] instruction_addr,
 	 output logic [XLEN-1:0] mem_addr,
-	 output logic memfetch);
+	 output logic memwrite, memfetch);
 
 	localparam SHAMTN = $clog2(XLEN);
 	localparam REGA = $clog2(REGN);

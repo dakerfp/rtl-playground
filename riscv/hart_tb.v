@@ -7,7 +7,8 @@ module riscv_hart_tb();
 
 wire [31:0] instr_addr;
 wire [31:0] mem_addr;
-wire memfetch;
+logic memfetch;
+logic memwrite;
 
 reg [31:0] instr_fetch;
 reg [31:0] mem_fetch;
@@ -21,7 +22,7 @@ riscv_hart rv_hart(
 
 	instr_addr,
 	instr_fetch,
-	memfetch
+	memwrite, memfetch
 );
 
 
