@@ -28,7 +28,8 @@ module riscv_hart
 
 	// ID - Instruction Decode
 
-	logic [XLEN-1:0] regs [0:REGN-1];// XXX: should be internal only, exporting only for testing
+	// XXX: should be internal only, exporting only for testing
+	logic [XLEN-1:0] regs [0:REGN-1];
 	logic [XLEN-1:0] immediate;
 
 	instruction_r_t id_r;
@@ -52,11 +53,13 @@ module riscv_hart
 		OP_IMM, OP_JALR, OP_LOAD, OP_MISC_MEM:
 			immediate = $signed(id_i.immi); // sign extend
 		OP_JAL:
-			immediate = $signed({id_j.immj3, id_j.immj2, id_j.immj1, id_j.immj0});
+			immediate = $signed({id_j.immj3, id_j.immj2,
+								 id_j.immj1, id_j.immj0});
 		OP_STORE:
 			immediate = $signed({id_s.imms1, id_s.imms0});
 		OP_BRANCH:
-			immediate = $signed({id_b.imms3, id_b.immb2, id_b.immb1, id_b.immb0, 1'b0}); // << 1
+			immediate = $signed({id_b.imms3, id_b.immb2,
+								 id_b.immb1, id_b.immb0, 1'b0}); // << 1
 		default: // OP
 			immediate = 0;
 		endcase	
