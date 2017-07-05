@@ -105,4 +105,10 @@ typedef struct packed {
 	opcode_t opcode;
 } instruction_t;
 
+typedef enum {
+	MEM_IDLE,
+	MEM_READ,
+	MEM_WRITE
+} mem_access_t;
+
 `endif // RISCV_ISA_SV

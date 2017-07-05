@@ -157,10 +157,11 @@ module riscv_hart
 		reg_t rd;
 	} EX;
 
+	// XXX: currently there is no option to correctly bypass left value
 	always @(posedge clk or posedge rst)  // always_ff
 		if (rst)
 			MA.result <= 0;
-		else case (EX.funct3)
+		else case (EX.funct3) // unique
 		FUNCT3_ADD:
 			MA.result <= $signed(EX.left) + $signed(EX.right);
 	 	FUNCT3_SLL:
@@ -200,8 +201,58 @@ module riscv_hart
 	struct packed {
 		logic [XLEN-1:0] result;
 		logic [XLEN-1:0] bypass;
-		logic mem_write;
+		mem_access_t access;
 		reg_t rd;
 	} MA;
+
+	always @(posedge clk or posedge rst)  // always_ff
+		if (rst) begin
+			mem_addr <= 0;
+			mem_data <= 0;
+			mem_write <= 0;
+			WB.result <= 0;
+			WB.rd <= 0;
+		end
+		else case (MA.access) // XXX: case unique
+		MEM_IDLE: begin
+			mem_addr <= 0;
+			mem_data <= 0;
+			mem_write <= 0;
+			WB.result <= MA.result;
+			WB.rd <= MA.rd;
+		end
+		MEM_READ: begin
+			mem_addr <= MA.result;
+			mem_data <= 0;
+			mem_write <= 0;
+			WB.result <= 0;
+			WB.rd <= MA.rd;
+		end
+		MEM_WRITE: begin
+			mem_addr <= MA.result;
+			mem_data <= MA.bypass;
+			mem_write <= 1;
+			WB.result <= 0;
+			WB.rd <= 0;
+		end
+		endcase
+
+	// WB - Write Back
+	struct packed {
+		logic [XLEN-1:0] result;
+		logic mem_read;
+		reg_t rd;
+	} WB;
+
+	logic [XLEN-1:0] wb_result;
+	assign wb_result = (WB.mem_read) ? mem_read : WB.result;
+
+	always @(posedge clk or posedge rst)  // always_ff
+		if (rst) begin
+			regs[0] <= 0;
+		end
+		else if (WB.rd != 0) begin
+			regs[WB.rd] <= wb_result;
+		end
 
 endmodule : riscv_hart
