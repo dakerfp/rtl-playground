@@ -3,7 +3,7 @@ VC=iverilog
 VFLAGS=-g2012 -Wall
 TMPOUTPUT=/tmp/vt.txt
 
-all: bin/asm bin/riscv
+all: bin bin/asm bin/riscv
 
 bin/riscv: riscv/riscv_sim.v
 	$(VC) $(VFLAGS) $^ -o $@
