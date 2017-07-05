@@ -1,20 +1,24 @@
+
 `ifndef RISCV_ISA_SV
 `define RISCV_ISA_SV
+
+`define always_ff always
+`define always_comb always @*
 
 // RV32I Base Instruction Set
 
 typedef enum logic [6:0] {
-	OP_AUIPC  = 7'b0010111,
-	OP_JAL    = 7'b1101111,
-	OP_JALR   = 7'b1100111,
-	OP_BRANCH = 7'b1100011,
-	OP_LOAD   = 7'b0000011,
-	OP_STORE  = 7'b0100011,
-	OP_IMM    = 7'b0010011,
-	OP        = 7'b0110011,
-	OP_FENCE  = 7'b0001111,
-	OP_SYSTEM = 7'b1110011,
-	OP_LUI    = 7'b0110111
+	OP_AUIPC    = 7'b0010111,
+	OP_JAL      = 7'b1101111,
+	OP_JALR     = 7'b1100111,
+	OP_BRANCH   = 7'b1100011,
+	OP_LOAD     = 7'b0000011,
+	OP_STORE    = 7'b0100011,
+	OP_IMM      = 7'b0010011,
+	OP          = 7'b0110011,
+	OP_MISC_MEM = 7'b0001111,
+	OP_SYSTEM   = 7'b1110011,
+	OP_LUI      = 7'b0110111
 } opcode_t;
 
 typedef enum logic [2:0] {
@@ -47,16 +51,14 @@ typedef struct packed {
 	reg_t rs1;
 	funct3_t funct3;
 	reg_t rd;
-	opcode_t opcode;
-} intruction_r_t;
+} instruction_r_t;
 
 typedef struct packed {
 	logic [11:0] immi;
 	reg_t rs1;
 	funct3_t funct3;
 	reg_t rd;
-	opcode_t opcode;
-} intruction_i_t;
+} instruction_i_t;
 
 typedef struct packed {
 	logic [11:5] imms1;
@@ -64,42 +66,43 @@ typedef struct packed {
 	reg_t rs1;
 	funct3_t funct3;
 	logic [4:0] imms0;
-	opcode_t opcode;
-} intruction_s_t;
+} instruction_s_t;
 
 typedef struct packed {
-	logic [12] immb3;
-	logic [10:5] immb1;
+	logic immb3; // [12]
+	logic [5:0] immb1; // [10:5]
+	reg_t rs2;
 	reg_t rs1;
 	funct3_branch_t funct3;
-	logic [4:1] immb0;
-	logic [11] immb2;
-	opcode_t opcode;
-} intruction_b_t;
+	logic [3:0] immb0; // [4:1]
+	logic immb2; // [11]
+} instruction_b_t;	
 
 typedef struct packed {
 	logic [31:12] immu;
 	reg_t rd;
-	opcode_t opcode;
-} intruction_u_t;
+} instruction_u_t;
 
 typedef struct packed {
-	logic [20] immj3;
-	logic [10:1] immj0;
-	logic [11] immj1;
-	logic [19:12] immj2;
+	logic immj3; // [20]
+	logic [9:0] immj0; // [10:1]
+	logic immj1; // [11]
+	logic [7:0] immj2; // [19:12] 
 	reg_t rd;
-	opcode_t opcode;
-} intruction_j_t;
+} instruction_j_t;
 
 typedef union packed {
-	intruction_r_t r;
-	intruction_i_t i;
-	intruction_s_t s;
-	intruction_b_t b;
-	intruction_u_t u;
-	intruction_j_t j;
-} intruction_t;
+	instruction_r_t r;
+	instruction_i_t i;
+	instruction_s_t s;
+	instruction_b_t b;
+	instruction_u_t u;
+	instruction_j_t j;
+} instruction_format_t;
 
+typedef struct packed {
+	instruction_format_t f;
+	opcode_t opcode;
+} instruction_t;
 
-`endif
+`endif // RISCV_ISA_SV
