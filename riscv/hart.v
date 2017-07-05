@@ -1,3 +1,5 @@
+
+`include "riscv/isa.v"
 `include "riscv/if.v"
 `include "riscv/id.v"
 `include "riscv/ex.v"
