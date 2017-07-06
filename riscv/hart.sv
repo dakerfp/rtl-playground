@@ -12,8 +12,9 @@ module riscv_hart
 	 output logic [XLEN-1:0] pc,
 
 	 input logic [XLEN-1:0] mem_read,
-	 output logic [XLEN-1:0] mem_addr, mem_data,
-	 output logic mem_write); 
+	 output logic [XLEN-1:0] mem_addr,
+	 output logic [XLEN-1:0] mem_data,
+	 output logic mem_write);
 
 	localparam SHAMTN = $clog2(XLEN);
 	localparam REGA = $clog2(REGN);
@@ -70,6 +71,8 @@ module riscv_hart
 			EX.right <= 0;
 			EX.funct3 <= FUNCT3_ADD;
 			EX.rd <= 0;
+			EX.access <= MEM_IDLE;
+			EX.bypass <= 0;
 		end
 		else case (instruction.opcode)
 		OP_LUI: begin
@@ -77,36 +80,48 @@ module riscv_hart
 			EX.right <= 0;
 			EX.funct3 <= FUNCT3_ADD;
 			EX.rd <= id_u.rd;
+			EX.access <= MEM_IDLE;
+			EX.bypass <= 0;
 		end
 		OP_JAL: begin
 			EX.left <= pc;
 			EX.right <= 4;
 			EX.funct3 <= FUNCT3_ADD;
 			EX.rd <= id_j.rd;
+			EX.access <= MEM_IDLE;
+			EX.bypass <= 0;
 		end
 		OP_AUIPC: begin
 			EX.left <= pc;
 			EX.right <= immediate;
 			EX.funct3 <= FUNCT3_ADD;
 			EX.rd <= id_u.rd;
+			EX.access <= MEM_IDLE;
+			EX.bypass <= 0;
 		end
 		OP_JALR: begin
 			EX.left <= pc;
 			EX.right <= 4;
 			EX.funct3 <= id_i.funct3;
 			EX.rd <= id_i.rd;
+			EX.access <= MEM_IDLE;
+			EX.bypass <= 0;
 		end
 		OP: begin
 			EX.left <= regs[id_r.rs1];
 			EX.right <= regs[id_r.rs2];
 			EX.funct3 <= id_r.funct3;
 			EX.rd <= id_r.rd;
+			EX.access <= MEM_IDLE;
+			EX.bypass <= 0;
 		end
 		OP_IMM: begin
 			EX.left <= regs[id_i.rs1];
 			EX.right <= immediate;
 			EX.funct3 <= id_i.funct3;
 			EX.rd <= id_i.rd;
+			EX.access <= MEM_IDLE;
+			EX.bypass <= 0;
 		end
 		OP_BRANCH: begin
 			// OP_BRANCH does not propagate through the pipeline
@@ -114,34 +129,45 @@ module riscv_hart
 			EX.right <= 0;
 			EX.funct3 <= FUNCT3_ADD;
 			EX.rd <= 0;
+			EX.access <= MEM_IDLE;
+			EX.bypass <= 0;
 		end
 		OP_LOAD: begin
 			EX.left <= regs[id_i.rs1];
 			EX.right <= immediate;
 			EX.funct3 <= id_i.funct3;
 			EX.rd <= id_i.rd;
+			EX.access <= MEM_READ;
+			EX.bypass <= 0;
 		end
 		OP_STORE: begin
 			EX.left <= regs[id_s.rs1];
 			EX.right <= immediate;
-			EX.funct3 <= id_s.funct3;
+			EX.funct3 <= FUNCT3_ADD;
 			EX.rd <= 0;
-			// TODO
+			EX.access <= MEM_WRITE;
+			EX.bypass <= regs[id_s.rs2];
+			// TODO: pass word id_s.funct3;
 		end
 		OP_MISC_MEM: begin
 			EX.funct3 <= id_i.funct3;
 			EX.rd <= id_i.rd;
+			EX.access <= MEM_IDLE;
 			$display("Not implemented"); // XXX
 		end
 		OP_SYSTEM: begin
 			EX.funct3 <= id_i.funct3;
 			EX.rd <= id_i.rd;
+			EX.access <= MEM_IDLE;
 			$display("Not implemented"); // XXX
 		end
 		default: begin
+			EX.invert <= 0;
 			EX.left <= 0;
 			EX.right <= 0;
 			EX.funct3 <= FUNCT3_ADD;
+			EX.rd <= 0;
+			EX.access <= MEM_IDLE;
 		end
 		endcase
 
@@ -149,13 +175,17 @@ module riscv_hart
 	// EX - Execution
 
 	struct packed {
+		logic invert;
 		logic [XLEN-1:0] left;
 		logic [XLEN-1:0] right;
-		logic [SHAMTN-1:0] shamt;
+		logic [XLEN-1:0] bypass;
 		funct3_t funct3;
-		logic invert;
 		reg_t rd;
+		mem_access_t access;
 	} EX;
+
+	logic [SHAMTN-1:0] ex_shamt;
+	assign ex_shamt = EX.right[SHAMTN-1:0];
 
 	// XXX: currently there is no option to correctly bypass left value
 	always @(posedge clk or posedge rst)  // always_ff
@@ -165,7 +195,7 @@ module riscv_hart
 		FUNCT3_ADD:
 			MA.result <= $signed(EX.left) + $signed(EX.right);
 	 	FUNCT3_SLL:
-	 		MA.result <= EX.left << EX.shamt;
+	 		MA.result <= EX.left << ex_shamt;
 		FUNCT3_SLT:
 			MA.result <= $signed(EX.left) < $signed(EX.right);
 		FUNCT3_SLTU:
@@ -174,9 +204,9 @@ module riscv_hart
 			MA.result <= EX.left ^ EX.right;
 		FUNCT3_SRL_SRA:
 			if (EX.invert)
-				MA.result <= $signed(EX.left) >>> EX.shamt;
+				MA.result <= $signed(EX.left) >>> ex_shamt;
 			else
-				MA.result <= EX.left >> EX.shamt;
+				MA.result <= EX.left >> ex_shamt;
 		FUNCT3_OR:
 			MA.result <= EX.left | EX.right;
 		FUNCT3_AND:
@@ -189,13 +219,19 @@ module riscv_hart
 		if (rst)
 			MA.bypass <= 0;
 		else
-			MA.bypass <= EX.right;
+			MA.bypass <= EX.bypass;
 
 	always @(posedge clk or posedge rst)  // always_ff
 		if (rst)
 			MA.rd <= 0;
 		else
 			MA.rd <= EX.rd;
+
+	always @(posedge clk or posedge rst)  // always_ff
+		if (rst)
+			MA.access <= MEM_IDLE;
+		else
+			MA.access <= EX.access;
 
 	// MA - Memory Access
 	struct packed {
@@ -212,6 +248,7 @@ module riscv_hart
 			mem_write <= 0;
 			WB.result <= 0;
 			WB.rd <= 0;
+			WB.mem_read <= 0;
 		end
 		else case (MA.access) // XXX: case unique
 		MEM_IDLE: begin
@@ -220,6 +257,7 @@ module riscv_hart
 			mem_write <= 0;
 			WB.result <= MA.result;
 			WB.rd <= MA.rd;
+			WB.mem_read <= 0;
 		end
 		MEM_READ: begin
 			mem_addr <= MA.result;
@@ -227,6 +265,7 @@ module riscv_hart
 			mem_write <= 0;
 			WB.result <= 0;
 			WB.rd <= MA.rd;
+			WB.mem_read <= 1;
 		end
 		MEM_WRITE: begin
 			mem_addr <= MA.result;
@@ -234,6 +273,7 @@ module riscv_hart
 			mem_write <= 1;
 			WB.result <= 0;
 			WB.rd <= 0;
+			WB.mem_read <= 0;
 		end
 		endcase
 
