@@ -12,7 +12,6 @@ var (
 	dumpFlag       = flag.Bool("d", false, "output hex dump format instead of binary")
 	stdoutFlag     = flag.Bool("stdout", false, "output into stdout")
 	txtFlag        = flag.Bool("txt", false, "output txt")
-	zeroPadFlag    = flag.Int("pad", -1, "zero padding size")
 )
 
 func main() {
@@ -52,10 +51,6 @@ func main() {
 		w = f
 	default:
 		panic("no output set")
-	}
-
-	if *zeroPadFlag > 0 {
-		w = &ZeroPad{w, *zeroPadFlag}
 	}
 
 	if *dumpFlag {
