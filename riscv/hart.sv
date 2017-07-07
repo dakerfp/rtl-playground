@@ -21,7 +21,7 @@ module riscv_hart
 	
 	// IF - Instruction Fetch
 
-	always @(posedge clk or posedge rst)
+	always @(posedge clk or posedge rst) // always_ff
 		if (rst)
 			pc <= 0;
 		else if (clk)
