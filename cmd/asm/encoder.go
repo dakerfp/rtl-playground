@@ -11,11 +11,12 @@ type InstructionEncoder interface {
 }
 
 type TextEncoder struct {
-	w io.Writer
+	w      io.Writer
+	format string
 }
 
 func (te *TextEncoder) EncodeInstruction(instr uint32) (err error) {
-	_, err = fmt.Fprintln(te.w, uint32(instr))
+	_, err = fmt.Fprintf(te.w, te.format, uint32(instr))
 	return
 }
 

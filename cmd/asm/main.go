@@ -60,7 +60,7 @@ func main() {
 
 	var enc InstructionEncoder
 	if *txtFlag {
-		enc = &TextEncoder{w}
+		enc = &TextEncoder{w, "%x\n"}
 	} else {
 		enc = &BinaryEncoder{w}
 	}
