@@ -170,3 +170,31 @@ func TestSamples(t *testing.T) {
 		}(path.Join("samples", fi.Name()))
 	}
 }
+
+func TestParse(t *testing.T) {
+	tts := []struct {
+		pattern string
+		regname string
+		offset  int
+		err     error
+	}{
+		{"7(t0)", "t0", 7, nil},
+		{"-3(t1)", "t1", -3, nil},
+		{"-3.9(x0)", "x0", 0, ErrInvalidOffset},
+		{"2(0)", "x0", 2, ErrInvalidRegister},
+		{"0(zero)", "x0", 0, nil},
+	}
+
+	for _, tt := range tts {
+		reg, offset, err := parseRegisterOffset(tt.pattern)
+		if err != tt.err {
+			t.Fatal(reg, offset, err)
+		}
+		if reg != RegNames[tt.regname] {
+			t.Fatal("wrong reg", reg)
+		}
+		if offset != tt.offset {
+			t.Fatal("wrong offset", offset)
+		}
+	}
+}

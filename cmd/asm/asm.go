@@ -15,6 +15,7 @@ var (
 	ErrUnknownInstruction      = errors.New("unknown instruction")
 	ErrInvalidRegister         = errors.New("invalid register")
 	ErrInvalidNumeral          = errors.New("invalid number literal")
+	ErrInvalidOffset           = errors.New("invalid offset value")
 	ErrSymbolRedefined         = errors.New("symbol redefined")
 )
 

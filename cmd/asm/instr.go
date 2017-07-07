@@ -1,6 +1,7 @@
 package main
 
 import (
+	"regexp"
 	"strconv"
 )
 
@@ -12,6 +13,36 @@ type Uint32 uint32
 
 func (u Uint32) Eval() (uint32, error) {
 	return uint32(u), nil
+}
+
+type RegisterOffset struct {
+	Reg Reg
+	Imm Immediate
+}
+
+func parseRegisterOffset(s string) (reg Reg, offset int, err error) {
+	r := regexp.MustCompile("^(-?\\d+)\\(([a-z0-9]+)\\)$")
+	matches := r.FindStringSubmatch(s)
+
+	if len(matches) != 3 {
+		err = ErrInvalidOffset
+		return
+	}
+
+	// get offset
+	offset, err = strconv.Atoi(matches[1])
+	if err != nil {
+		err = ErrInvalidNumeral
+		return
+	}
+
+	// get register
+	var ok bool
+	reg, ok = RegNames[matches[2]]
+	if !ok {
+		err = ErrInvalidRegister
+	}
+	return
 }
 
 type Instruction interface {
@@ -221,20 +252,16 @@ type InstructionS struct {
 }
 
 func parseInstructionS(opcode OpCode, funct3 Funct3, args ...string) (*InstructionS, error) {
-	if len(args) != 3 {
+	if len(args) != 2 {
 		return nil, ErrWrongInstrunctionFormat
 	}
 	rs1, ok := RegNames[args[0]]
 	if !ok {
 		return nil, ErrInvalidRegister
 	}
-	rs2, ok := RegNames[args[1]]
-	if !ok {
-		return nil, ErrInvalidRegister
-	}
-	imms, err := strconv.ParseInt(args[2], 10, 12)
+	rs2, imms, err := parseRegisterOffset(args[1])
 	if err != nil {
-		return nil, ErrInvalidNumeral
+		return nil, err
 	}
 	return &InstructionS{opcode, Funct3Add, rs1, rs2, Uint32(imms)}, nil
 }
