@@ -33,18 +33,12 @@ module hartsim();
 
 	integer i;
 	string romfile;
-	string dumpfile;
 	initial begin
-		if ($value$plusargs("%s", romfile)) $error;
-		// /if ($value$plusargs("%s", dumpfile)) $error;
-		$display(romfile);
-		$display(dumpfile);
+		if (!$value$plusargs("%s", romfile)) $error;
 		$readmemh(romfile, instr_memory);
 		reset;
 		tickn(100);
-		for (i = 0; i < 16; i = i + 1)
-			$display("%d", data_memory[i]);
-		// $writememh("")
+		$writememh("dump.hex", data_memory);
 	end
 
 endmodule : hartsim
