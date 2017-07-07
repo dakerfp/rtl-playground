@@ -33,21 +33,24 @@ const (
 	Funct3StoreH        = 1
 	Funct3StoreW        = 2
 
+	Funct3Fence  Funct3 = 0
+	Funct3FenceI Funct3 = 1
+
 	Funct3None Funct3 = 0
 )
 
 const (
-	OpImm    OpCode = 19
-	Op              = 51
-	OpLui           = 55
-	OpStore         = 35
-	OpLoad          = 3
-	OpJal           = 111
-	OpJalr          = 103
-	OpAuipc         = 23
-	OpBranch        = 99
-	OpFence         = 15
-	OpSystem        = 115
+	OpImm     OpCode = 19
+	Op               = 51
+	OpLui            = 55
+	OpStore          = 35
+	OpLoad           = 3
+	OpJal            = 111
+	OpJalr           = 103
+	OpAuipc          = 23
+	OpBranch         = 99
+	OpMiscMem        = 15
+	OpSystem         = 115
 )
 
 const (
