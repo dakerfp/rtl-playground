@@ -97,6 +97,13 @@ var RegNames = map[string]Reg{
 	"x31": Reg(31), "t6": Reg(31),
 }
 
+var NOP Instruction = &InstructionI{
+	OpImm,
+	0, 0,
+	Funct3Add,
+	Uint32(0),
+}
+
 type Immediate interface {
 	Eval() (uint32, error)
 }

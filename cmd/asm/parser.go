@@ -261,11 +261,11 @@ func parseInstructionS(opcode OpCode, funct3 Funct3, args ...string) (*Instructi
 	if len(args) != 2 {
 		return nil, ErrWrongInstrunctionFormat
 	}
-	rs1, ok := RegNames[args[0]]
+	rs2, ok := RegNames[args[0]]
 	if !ok {
 		return nil, ErrInvalidRegister
 	}
-	rs2, imms, err := parseRegisterOffset(args[1])
+	rs1, imms, err := parseRegisterOffset(args[1])
 	if err != nil {
 		return nil, err
 	}

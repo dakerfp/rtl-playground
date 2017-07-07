@@ -19,7 +19,7 @@ type memAssert struct {
 }
 
 func asmMemAsserts(filename string) ([]memAssert, error) {
-	r := regexp.MustCompile("^#\\ +assert\\ +mem\\[(\\d+)\\]\\ +==\\ +(-?\\d+)")
+	r := regexp.MustCompile("#\\ +assert\\ +mem\\[(\\d+)\\]\\ +==\\ +(-?\\d+)")
 
 	f, err := os.Open(filename)
 	if err != nil {
@@ -97,6 +97,7 @@ func TestPhony(t *testing.T) {
 		cmd := exec.Command(
 			"../bin/asm",
 			"-txt",
+			"-pad", "512",
 			"-o", "/tmp/rom.hex",
 			fi.Name(),
 		)
@@ -111,10 +112,12 @@ func TestPhony(t *testing.T) {
 		// write memdump at ./dump.hex
 		cmd = exec.Command("../bin/riscv", "+/tmp/rom.hex")
 		output, err = cmd.CombinedOutput()
+		fmt.Println(string(output))
 		if err != nil {
-			t.Fatal(fi.Name(), string(output))
+			t.Fatal(fi.Name())
 		}
 
+		// check code assertions
 		mem, err := loadMemDump("dump.hex", 256)
 		if err != nil {
 			t.Fatal(err)
@@ -125,7 +128,8 @@ func TestPhony(t *testing.T) {
 		}
 		for _, assert := range asserts {
 			if mem[assert.addr] != int64(assert.value) {
-				t.Fatalf("assertion error in file %q at line: %d", fi.Name(), assert.lineno)
+				t.Fatalf("assertion error in file %q at line %d. Got %d, expected %d",
+					fi.Name(), assert.lineno, mem[assert.addr], assert.value)
 			}
 		}
 	}

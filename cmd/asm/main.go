@@ -12,6 +12,7 @@ var (
 	dumpFlag       = flag.Bool("d", false, "output hex dump format instead of binary")
 	stdoutFlag     = flag.Bool("stdout", false, "output into stdout")
 	txtFlag        = flag.Bool("txt", false, "output txt")
+	zeroPadFlag    = flag.Int("pad", -1, "pad .text with n zeros")
 )
 
 func main() {
@@ -56,6 +57,16 @@ func main() {
 	if *dumpFlag {
 		w = hex.Dumper(w)
 		defer w.Close()
+	}
+
+	if *zeroPadFlag > 0 {
+		section, ok := obj.Sections[".text"]
+		if !ok {
+			panic(section)
+		}
+		for i := len(section); i < *zeroPadFlag; i++ {
+			section = append(section, NOP)
+		}
 	}
 
 	var enc InstructionEncoder

@@ -37,7 +37,7 @@ module hartsim();
 		if (!$value$plusargs("%s", romfile)) $error;
 		$readmemh(romfile, instr_memory);
 		reset;
-		tickn(100);
+		tickn(32);
 		$writememh("dump.hex", data_memory);
 	end
 
