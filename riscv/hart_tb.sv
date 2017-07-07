@@ -24,33 +24,33 @@ module riscv_hart_tb();
 			instruction <= 0;
 		end
 		else begin
-			instruction <= instr_memory[pc];
+			instruction <= instr_memory[pc >> 2];
 			if (mem_write)
-				data_memory[mem_addr] <= mem_data;
+				data_memory[mem_addr >> 2] <= mem_data;
 			else
-				mem_read <= data_memory[mem_addr];
+				mem_read <= data_memory[mem_addr >> 2];
 		end
 
 	task test_li;
 		instr_memory[8'd0] = { // li t0, 42
 			12'd42, 5'd0, FUNCT3_ADD, 5'd5, OP_IMM
 		};
-		instr_memory[8'd4] = { // li x1, 77
+		instr_memory[8'd1] = { // li x1, 77
 			12'd77, 5'd0, FUNCT3_ADD, 5'd1, OP_IMM
 		};
-		instr_memory[8'd8] = { // nop
+		instr_memory[8'd2] = { // nop
 			32'd0
 		};
-		instr_memory[8'd12] = { // nop
+		instr_memory[8'd3] = { // nop
 			32'd0
 		};
-		instr_memory[8'd16] = { // nop
+		instr_memory[8'd4] = { // nop
 			32'd0
 		};
-		instr_memory[8'd20] = { // sw
+		instr_memory[8'd5] = { // sw
 			7'd0, 5'd5, 5'd0, 3'b010, 5'd12, OP_STORE
 		};
-		instr_memory[8'd24] = { // sw
+		instr_memory[8'd6] = { // sw
 			7'd0, 5'd1, 5'd0, 3'b010, 5'd8, OP_STORE
 		};
 		reset;
@@ -64,9 +64,9 @@ module riscv_hart_tb();
 		tick;
 		tick;
 		tick;
-		if (!(data_memory[12] == 42)) $error;
+		if (data_memory[3] !== 42) $error;
 		tick;
-		if (!(data_memory[8] == 77)) $error;
+		if (data_memory[2] !== 77) $error;
 	endtask : test_li
 
 	initial begin
