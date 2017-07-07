@@ -1,10 +1,5 @@
 package main
 
-import (
-	"regexp"
-	"strconv"
-)
-
 type Immediate interface {
 	Eval() (uint32, error)
 }
@@ -18,31 +13,6 @@ func (u Uint32) Eval() (uint32, error) {
 type RegisterOffset struct {
 	Reg Reg
 	Imm Immediate
-}
-
-func parseRegisterOffset(s string) (reg Reg, offset int, err error) {
-	r := regexp.MustCompile("^(-?\\d+)\\(([a-z0-9]+)\\)$")
-	matches := r.FindStringSubmatch(s)
-
-	if len(matches) != 3 {
-		err = ErrInvalidOffset
-		return
-	}
-
-	// get offset
-	offset, err = strconv.Atoi(matches[1])
-	if err != nil {
-		err = ErrInvalidNumeral
-		return
-	}
-
-	// get register
-	var ok bool
-	reg, ok = RegNames[matches[2]]
-	if !ok {
-		err = ErrInvalidRegister
-	}
-	return
 }
 
 type Instruction interface {
@@ -67,21 +37,6 @@ func (i InstructionU) Link() (uint32, error) {
 	)
 }
 
-func parseInstructionU(opcode OpCode, args ...string) (*InstructionU, error) {
-	if len(args) != 2 {
-		return nil, ErrWrongInstrunctionFormat
-	}
-	rd, ok := RegNames[args[0]]
-	if !ok {
-		return nil, ErrInvalidRegister
-	}
-	immu, err := strconv.ParseInt(args[1], 10, 12)
-	if err != nil {
-		return nil, ErrInvalidNumeral
-	}
-	return &InstructionU{opcode, rd, Uint32(immu)}, nil
-}
-
 type InstructionR struct {
 	OpCode
 	Rd, Rs1, Rs2 Reg
@@ -98,25 +53,6 @@ func (i InstructionR) Link() (uint32, error) {
 		bitslice{uint32(i.Rd), 5},
 		bitslice{uint32(i.OpCode), 7},
 	)
-}
-
-func parseInstructionR(opcode OpCode, funct3 Funct3, funct7 Funct7, args ...string) (*InstructionR, error) {
-	if len(args) != 3 {
-		return nil, ErrWrongInstrunctionFormat
-	}
-	rd, ok := RegNames[args[0]]
-	if !ok {
-		return nil, ErrInvalidRegister
-	}
-	rs1, ok := RegNames[args[1]]
-	if !ok {
-		return nil, ErrInvalidRegister
-	}
-	rs2, ok := RegNames[args[2]]
-	if !ok {
-		return nil, ErrInvalidRegister
-	}
-	return &InstructionR{opcode, rd, rs1, rs2, funct3, funct7}, nil
 }
 
 type InstructionB struct {
@@ -143,25 +79,6 @@ func (i InstructionB) Link() (uint32, error) {
 	)
 }
 
-func parseInstructionB(opcode OpCode, funct3 Funct3, args ...string) (*InstructionB, error) {
-	if len(args) != 3 {
-		return nil, ErrWrongInstrunctionFormat
-	}
-	rs1, ok := RegNames[args[0]]
-	if !ok {
-		return nil, ErrInvalidRegister
-	}
-	rs2, ok := RegNames[args[1]]
-	if !ok {
-		return nil, ErrInvalidRegister
-	}
-	immb, err := strconv.ParseInt(args[2], 10, 12)
-	if err != nil {
-		return nil, ErrInvalidNumeral
-	}
-	return &InstructionB{opcode, funct3, rs1, rs2, Uint32(immb)}, nil
-}
-
 type InstructionI struct {
 	OpCode
 	Rd, Rs1 Reg
@@ -181,40 +98,6 @@ func (i InstructionI) Link() (uint32, error) {
 		bitslice{uint32(i.Rd), 5},
 		bitslice{uint32(i.OpCode), 7},
 	)
-}
-
-func parseInstructionI(opcode OpCode, funct3 Funct3, args ...string) (*InstructionI, error) {
-	if len(args) != 3 {
-		return nil, ErrWrongInstrunctionFormat
-	}
-	rd, ok := RegNames[args[0]]
-	if !ok {
-		return nil, ErrInvalidRegister
-	}
-	rs1, ok := RegNames[args[1]]
-	if !ok {
-		return nil, ErrInvalidRegister
-	}
-	immi, err := strconv.ParseInt(args[2], 10, 12)
-	if err != nil {
-		return nil, ErrInvalidNumeral
-	}
-	return &InstructionI{opcode, rd, rs1, Funct3Add, Uint32(immi)}, nil
-}
-
-func parseInstructionIOffset(opcode OpCode, funct3 Funct3, args ...string) (*InstructionI, error) {
-	if len(args) != 2 {
-		return nil, ErrWrongInstrunctionFormat
-	}
-	rd, ok := RegNames[args[0]]
-	if !ok {
-		return nil, ErrInvalidRegister
-	}
-	rs1, immi, err := parseRegisterOffset(args[1])
-	if err != nil {
-		return nil, err
-	}
-	return &InstructionI{opcode, rd, rs1, Funct3Add, Uint32(immi)}, nil
 }
 
 type InstructionIS struct {
@@ -240,45 +123,11 @@ func (i InstructionIS) Link() (uint32, error) {
 	)
 }
 
-func parseInstructionIS(opcode OpCode, funct3 Funct3, funct7 Funct7, args ...string) (*InstructionIS, error) {
-	if len(args) != 3 {
-		return nil, ErrWrongInstrunctionFormat
-	}
-	rd, ok := RegNames[args[0]]
-	if !ok {
-		return nil, ErrInvalidRegister
-	}
-	rs1, ok := RegNames[args[1]]
-	if !ok {
-		return nil, ErrInvalidRegister
-	}
-	shamt, err := strconv.ParseInt(args[2], 10, 12)
-	if err != nil {
-		return nil, ErrInvalidNumeral
-	}
-	return &InstructionIS{opcode, rd, rs1, Uint32(shamt), funct3, funct7}, nil
-}
-
 type InstructionS struct {
 	OpCode
 	Funct3
 	Rs1, Rs2 Reg
 	Immediate
-}
-
-func parseInstructionS(opcode OpCode, funct3 Funct3, args ...string) (*InstructionS, error) {
-	if len(args) != 2 {
-		return nil, ErrWrongInstrunctionFormat
-	}
-	rs1, ok := RegNames[args[0]]
-	if !ok {
-		return nil, ErrInvalidRegister
-	}
-	rs2, imms, err := parseRegisterOffset(args[1])
-	if err != nil {
-		return nil, err
-	}
-	return &InstructionS{opcode, Funct3Add, rs1, rs2, Uint32(imms)}, nil
 }
 
 func (i InstructionS) Link() (uint32, error) {
@@ -315,19 +164,4 @@ func (i InstructionJ) Link() (uint32, error) {
 		bitslice{uint32(i.Rd), 5},
 		bitslice{uint32(i.OpCode), 7},
 	)
-}
-
-func parseInstructionJ(opcode OpCode, args ...string) (*InstructionJ, error) {
-	if len(args) != 2 {
-		return nil, ErrWrongInstrunctionFormat
-	}
-	rd, ok := RegNames[args[0]]
-	if !ok {
-		return nil, ErrInvalidRegister
-	}
-	immj, err := strconv.ParseInt(args[1], 10, 12)
-	if err != nil {
-		return nil, ErrInvalidNumeral
-	}
-	return &InstructionJ{opcode, rd, Uint32(immj)}, nil
 }
