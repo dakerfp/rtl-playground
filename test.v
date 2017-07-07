@@ -23,6 +23,16 @@ begin
 end
 endtask
 
+integer iticks;
+task tickn(
+	input integer n
+);
+begin
+	for (iticks = 0; iticks < n; iticks = iticks + 1)
+		tick;
+end
+endtask
+
 task assert_if(
 	input bit cond,
 	input string msg

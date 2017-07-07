@@ -54,16 +54,7 @@ module riscv_hart_tb();
 			7'd0, 5'd1, 5'd0, 3'b010, 5'd8, OP_STORE
 		};
 		reset;
-		tick;
-		tick;
-		tick;
-		tick;
-		tick;
-		tick;
-		tick;
-		tick;
-		tick;
-		tick;
+		tickn(10);
 		if (data_memory[3] !== 42) $error;
 		tick;
 		if (data_memory[2] !== 77) $error;
