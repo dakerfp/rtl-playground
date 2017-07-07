@@ -202,6 +202,21 @@ func parseInstructionI(opcode OpCode, funct3 Funct3, args ...string) (*Instructi
 	return &InstructionI{opcode, rd, rs1, Funct3Add, Uint32(immi)}, nil
 }
 
+func parseInstructionIOffset(opcode OpCode, funct3 Funct3, args ...string) (*InstructionI, error) {
+	if len(args) != 2 {
+		return nil, ErrWrongInstrunctionFormat
+	}
+	rd, ok := RegNames[args[0]]
+	if !ok {
+		return nil, ErrInvalidRegister
+	}
+	rs1, immi, err := parseRegisterOffset(args[1])
+	if err != nil {
+		return nil, err
+	}
+	return &InstructionI{opcode, rd, rs1, Funct3Add, Uint32(immi)}, nil
+}
+
 type InstructionIS struct {
 	OpCode
 	Rd, Rs1 Reg

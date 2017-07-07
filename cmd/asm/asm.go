@@ -198,15 +198,15 @@ func parseCommand(tokens []string) (Instruction, error) {
 		return parseInstructionIS(OpImm, Funct3Sll, Funct7Sll, tokens[1:]...)
 	// Load
 	case "lb":
-		return parseInstructionI(OpLoad, Funct3LoadB, tokens[1:]...)
+		return parseInstructionIOffset(OpLoad, Funct3LoadB, tokens[1:]...)
 	case "lbu":
-		return parseInstructionI(OpLoad, Funct3LoadBU, tokens[1:]...)
+		return parseInstructionIOffset(OpLoad, Funct3LoadBU, tokens[1:]...)
 	case "lh":
-		return parseInstructionI(OpLoad, Funct3LoadH, tokens[1:]...)
+		return parseInstructionIOffset(OpLoad, Funct3LoadH, tokens[1:]...)
 	case "lhu":
-		return parseInstructionI(OpLoad, Funct3LoadHU, tokens[1:]...)
+		return parseInstructionIOffset(OpLoad, Funct3LoadHU, tokens[1:]...)
 	case "lw":
-		return parseInstructionI(OpLoad, Funct3LoadW, tokens[1:]...)
+		return parseInstructionIOffset(OpLoad, Funct3LoadW, tokens[1:]...)
 	// Store
 	case "sb":
 		return parseInstructionS(OpStore, Funct3StoreB, tokens[1:]...)
