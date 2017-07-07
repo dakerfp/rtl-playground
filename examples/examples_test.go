@@ -87,21 +87,11 @@ func TestPhony(t *testing.T) {
 		failParse, failExec bool
 	}
 
-	expectedFail := map[string]exampleFail{
-		"add.asm":      {true, true},
-		"fib.asm":      {true, true},
-		"all.asm":      {false, false},
-		"overflow.asm": {false, false},
-	}
-
 	for _, fi := range dir {
 		if !strings.HasSuffix(fi.Name(), ".asm") {
 			continue
 		}
-		ef, ok := expectedFail[fi.Name()]
-		if !ok {
-			ef = exampleFail{false, false}
-		}
+		parseFail := strings.HasSuffix(fi.Name(), "_fail.asm")
 
 		// run asm
 		cmd := exec.Command(
@@ -111,9 +101,9 @@ func TestPhony(t *testing.T) {
 			fi.Name(),
 		)
 		output, err := cmd.CombinedOutput()
-		if (err != nil) != ef.failParse {
+		if (err != nil) != parseFail {
 			t.Fatal(fi.Name(), string(output))
-		} else if ef.failParse {
+		} else if parseFail {
 			continue
 		}
 

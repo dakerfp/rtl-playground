@@ -4,6 +4,6 @@ fib:
 	add t2, t0, t1
 	mv t0, t1
 	mv t1, t2
-	j fib
+	# j fib
 haltl:
-	j haltl
+	# j haltl
