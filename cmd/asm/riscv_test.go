@@ -120,7 +120,7 @@ load:
 		t.Fatal(l)
 	}
 
-	li, err := text[0].Link()
+	li, err := text[0].Eval()
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -110,7 +110,7 @@ func Parse(r io.Reader) (*Object, error) {
 func Assemble(ie InstructionEncoder, o *Object) error {
 	for _, section := range o.Sections {
 		for _, instr := range section {
-			ui, err := instr.Link()
+			ui, err := instr.Eval()
 			if err != nil {
 				return err
 			}
