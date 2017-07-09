@@ -18,12 +18,20 @@ type memAssert struct {
 	value  int64
 }
 
-func asmMemAsserts(filename string) ([]memAssert, error) {
-	r := regexp.MustCompile("^#\\ +assert\\ +mem\\[(\\d+)\\]\\ +==\\ +(-?\\d+)")
+type asmTest struct {
+	clocks  int
+	asserts []memAssert
+}
 
-	f, err := os.Open(filename)
+func asmMemAsserts(filename string) (t asmTest, err error) {
+	t.clocks = 100
+	r := regexp.MustCompile("#\\ +assert\\ +mem\\[(\\d+)\\]\\ +==\\ +(-?\\d+)")
+	clocksR := regexp.MustCompile("#\\ +clocks\\ +(\\d+)")
+
+	var f *os.File
+	f, err = os.Open(filename)
 	if err != nil {
-		return nil, err
+		return
 	}
 	defer f.Close()
 
@@ -32,21 +40,28 @@ func asmMemAsserts(filename string) ([]memAssert, error) {
 	for i := 0; scanner.Scan(); i++ {
 		m := r.FindStringSubmatch(scanner.Text())
 		if len(m) == 0 {
+			m = clocksR.FindStringSubmatch(scanner.Text())
+			if len(m) != 0 {
+				t.clocks, err = strconv.Atoi(m[1])
+				if err != nil {
+					return
+				}
+			}
 			continue
 		}
 		var assert memAssert
 		assert.addr, err = strconv.Atoi(m[1])
 		if err != nil {
-			return nil, err
+			return
 		}
 		assert.value, err = strconv.ParseInt(m[2], 10, 64) // TODO: accept 0x
 		if err != nil {
-			return nil, err
+			return
 		}
 		assert.lineno = i
-		asserts = append(asserts, assert)
+		t.asserts = append(t.asserts, assert)
 	}
-	return asserts, nil
+	return
 }
 
 func loadMemDump(filename string, length int) ([]int64, error) {
@@ -107,9 +122,17 @@ func TestPhony(t *testing.T) {
 			continue
 		}
 
+		asmT, err := asmMemAsserts(fi.Name())
+		if err != nil {
+			t.Fatal(err)
+		}
+
 		// run simulator
 		// write memdump at ./dump.hex
-		cmd = exec.Command("../bin/riscv", "+/tmp/rom.hex")
+		cmd = exec.Command(
+			"../bin/riscv",
+			fmt.Sprintf("+%d", asmT.clocks),
+		)
 		output, err = cmd.CombinedOutput()
 		if err != nil {
 			t.Fatal(fi.Name(), string(output))
@@ -119,13 +142,10 @@ func TestPhony(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		asserts, err := asmMemAsserts(fi.Name())
-		if err != nil {
-			t.Fatal(err)
-		}
-		for _, assert := range asserts {
+		for _, assert := range asmT.asserts {
 			if mem[assert.addr] != int64(assert.value) {
-				t.Fatalf("assertion error in file %q at line: %d", fi.Name(), assert.lineno)
+
+				t.Fatalf("assertion error in file %q at line: %d, got %d", fi.Name(), assert.lineno, mem[assert.addr])
 			}
 		}
 	}

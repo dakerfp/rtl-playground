@@ -32,12 +32,12 @@ module hartsim();
 		end
 
 	integer i;
-	string romfile;
+	integer nclocks;
 	initial begin
-		if (!$value$plusargs("%s", romfile)) $error;
-		$readmemh(romfile, instr_memory);
+		if (!$value$plusargs("%d", nclocks)) $error;
+		$readmemh("/tmp/rom.hex", instr_memory);
 		reset;
-		tickn(100);
+		tickn(nclocks);
 		$writememh("dump.hex", data_memory);
 	end
 
