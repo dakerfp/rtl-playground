@@ -36,8 +36,7 @@ func asmMemAsserts(filename string) (t asmTest, err error) {
 	defer f.Close()
 
 	scanner := bufio.NewScanner(f)
-	var asserts []memAssert
-	for i := 0; scanner.Scan(); i++ {
+	for i := 1; scanner.Scan(); i++ {
 		m := r.FindStringSubmatch(scanner.Text())
 		if len(m) == 0 {
 			m = clocksR.FindStringSubmatch(scanner.Text())
