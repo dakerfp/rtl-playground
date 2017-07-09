@@ -20,14 +20,34 @@ module riscv_hart
 	localparam REGA = $clog2(REGN);
 	
 	// IF - Instruction Fetch
+	always @(posedge clk or posedge rst) // always_ff
+		if (rst)
+			pc <= 0;
+		else case (instruction.opcode)
+		OP_JALR, OP_JAL:
+			pc <= id_pc + immediate;
+		OP_BRANCH:
+			if (id_branch)
+				pc <= id_pc + immediate;
+			else
+				pc <= id_pc + 4;
+		default:
+			pc <= id_pc + 4;
+		endcase
 
+	always @(posedge clk or posedge rst) // always_ff
+		if (rst)
+			id_pc <= 0;
+		else
+			id_pc <= pc;
 
 	// ID - Instruction Decode
 
 	// XXX: should be internal only, exporting only for testing
 	logic [XLEN-1:0] regs [0:REGN-1];
 	logic [XLEN-1:0] immediate;
-
+	logic id_branch;
+	logic [XLEN-1:0] id_pc;
 	instruction_r_t id_r;
 	instruction_i_t id_i;
 	instruction_u_t id_u;
@@ -59,7 +79,23 @@ module riscv_hart
 								 id_b.immb1, id_b.immb0, 1'b0}); // << 1
 		default: // OP
 			immediate = 0;
-		endcase	
+		endcase
+
+	always @(instruction) // XXX: always_comb
+		case (id_b.funct3)
+		FUNCT3_BEQ:
+			id_branch = regs[id_b.rs1] === regs[id_b.rs2];
+		FUNCT3_BNEQ:
+			id_branch = regs[id_b.rs1] !== regs[id_b.rs2];
+		FUNCT3_BLT:
+			id_branch = $signed(regs[id_b.rs1]) < $signed(regs[id_b.rs2]);
+		FUNCT3_BLTU:
+			id_branch = regs[id_b.rs1] < regs[id_b.rs2];
+		FUNCT3_BGE :
+			id_branch = $signed(regs[id_b.rs1]) >= $signed(regs[id_b.rs2]);
+		FUNCT3_BGEU:
+			id_branch = regs[id_b.rs1] >= regs[id_b.rs2];
+		endcase
 
 	always @(posedge clk or posedge rst) // always_ff
 		if (rst) begin
@@ -69,7 +105,6 @@ module riscv_hart
 			EX.rd <= 0;
 			EX.access <= MEM_IDLE;
 			EX.bypass <= 0;
-			pc <= 0;
 		end
 		else case (instruction.opcode)
 		OP_LUI: begin
@@ -79,7 +114,6 @@ module riscv_hart
 			EX.rd <= id_u.rd;
 			EX.access <= MEM_IDLE;
 			EX.bypass <= 0;
-			pc <= pc + 4;
 		end
 		OP_JAL: begin
 			EX.left <= pc;
@@ -88,7 +122,6 @@ module riscv_hart
 			EX.rd <= id_j.rd;
 			EX.access <= MEM_IDLE;
 			EX.bypass <= 0;
-			pc <= pc - 4 + immediate; // XXX
 		end
 		OP_AUIPC: begin
 			EX.left <= pc;
@@ -97,7 +130,6 @@ module riscv_hart
 			EX.rd <= id_u.rd;
 			EX.access <= MEM_IDLE;
 			EX.bypass <= 0;
-			pc <= pc; // XXX pc + 4;
 		end
 		OP_JALR: begin
 			EX.left <= pc;
@@ -106,7 +138,6 @@ module riscv_hart
 			EX.rd <= id_i.rd;
 			EX.access <= MEM_IDLE;
 			EX.bypass <= 0;
-			pc <= pc + immediate - 4; // XXX
 		end
 		OP: begin
 			EX.left <= regs[id_r.rs1];
@@ -115,7 +146,6 @@ module riscv_hart
 			EX.rd <= id_r.rd;
 			EX.access <= MEM_IDLE;
 			EX.bypass <= 0;
-			pc <= pc + 4;
 		end
 		OP_IMM: begin
 			EX.left <= regs[id_i.rs1];
@@ -124,7 +154,6 @@ module riscv_hart
 			EX.rd <= id_i.rd;
 			EX.access <= MEM_IDLE;
 			EX.bypass <= 0;
-			pc <= pc + 4;
 		end
 		OP_BRANCH: begin
 			// OP_BRANCH does not propagate through the pipeline
@@ -134,7 +163,6 @@ module riscv_hart
 			EX.rd <= 0;
 			EX.access <= MEM_IDLE;
 			EX.bypass <= 0;
-			pc <= (pc + immediate); // XXX
 		end
 		OP_LOAD: begin
 			EX.left <= regs[id_i.rs1];
@@ -143,7 +171,6 @@ module riscv_hart
 			EX.rd <= id_i.rd;
 			EX.access <= MEM_READ;
 			EX.bypass <= 0;
-			pc <= pc + 4;
 		end
 		OP_STORE: begin
 			EX.left <= regs[id_s.rs1];
@@ -152,21 +179,18 @@ module riscv_hart
 			EX.rd <= 0;
 			EX.access <= MEM_WRITE;
 			EX.bypass <= regs[id_s.rs2];
-			pc <= pc + 4;
 			// TODO: pass word id_s.funct3;
 		end
 		OP_MISC_MEM: begin
 			EX.funct3 <= id_i.funct3;
 			EX.rd <= id_i.rd;
 			EX.access <= MEM_IDLE;
-			pc <= pc + 4;
 			$display("Not implemented"); // XXX
 		end
 		OP_SYSTEM: begin
 			EX.funct3 <= id_i.funct3;
 			EX.rd <= id_i.rd;
 			EX.access <= MEM_IDLE;
-			pc <= pc + 4;
 			$display("Not implemented"); // XXX
 		end
 		default: begin
@@ -176,10 +200,8 @@ module riscv_hart
 			EX.funct3 <= FUNCT3_ADD;
 			EX.rd <= 0;
 			EX.access <= MEM_IDLE;
-			pc <= pc + 4;
 		end
 		endcase
-
 
 	// EX - Execution
 
