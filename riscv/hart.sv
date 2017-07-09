@@ -21,11 +21,6 @@ module riscv_hart
 	
 	// IF - Instruction Fetch
 
-	always @(posedge clk or posedge rst)
-		if (rst)
-			pc <= 0;
-		else if (clk)
-			pc <= pc + 4; // TODO: support branch and jump
 
 	// ID - Instruction Decode
 
@@ -44,6 +39,7 @@ module riscv_hart
 	assign id_r = id_format.r;
 	assign id_i = id_format.i;
 	assign id_u = id_format.u;
+	assign id_j = id_format.j;
 	assign id_s = id_format.s;
 	assign id_b = id_format.b;
 
@@ -55,7 +51,7 @@ module riscv_hart
 			immediate = $signed(id_i.immi); // sign extend
 		OP_JAL:
 			immediate = $signed({id_j.immj3, id_j.immj2,
-								 id_j.immj1, id_j.immj0});
+								 id_j.immj1, id_j.immj0, 1'b0});
 		OP_STORE:
 			immediate = $signed({id_s.imms1, id_s.imms0});
 		OP_BRANCH:
@@ -73,6 +69,7 @@ module riscv_hart
 			EX.rd <= 0;
 			EX.access <= MEM_IDLE;
 			EX.bypass <= 0;
+			pc <= 0;
 		end
 		else case (instruction.opcode)
 		OP_LUI: begin
@@ -82,6 +79,7 @@ module riscv_hart
 			EX.rd <= id_u.rd;
 			EX.access <= MEM_IDLE;
 			EX.bypass <= 0;
+			pc <= pc + 4;
 		end
 		OP_JAL: begin
 			EX.left <= pc;
@@ -90,6 +88,7 @@ module riscv_hart
 			EX.rd <= id_j.rd;
 			EX.access <= MEM_IDLE;
 			EX.bypass <= 0;
+			pc <= pc - 4 + immediate; // XXX
 		end
 		OP_AUIPC: begin
 			EX.left <= pc;
@@ -98,6 +97,7 @@ module riscv_hart
 			EX.rd <= id_u.rd;
 			EX.access <= MEM_IDLE;
 			EX.bypass <= 0;
+			pc <= pc; // XXX pc + 4;
 		end
 		OP_JALR: begin
 			EX.left <= pc;
@@ -106,6 +106,7 @@ module riscv_hart
 			EX.rd <= id_i.rd;
 			EX.access <= MEM_IDLE;
 			EX.bypass <= 0;
+			pc <= pc + immediate - 4; // XXX
 		end
 		OP: begin
 			EX.left <= regs[id_r.rs1];
@@ -114,6 +115,7 @@ module riscv_hart
 			EX.rd <= id_r.rd;
 			EX.access <= MEM_IDLE;
 			EX.bypass <= 0;
+			pc <= pc + 4;
 		end
 		OP_IMM: begin
 			EX.left <= regs[id_i.rs1];
@@ -122,6 +124,7 @@ module riscv_hart
 			EX.rd <= id_i.rd;
 			EX.access <= MEM_IDLE;
 			EX.bypass <= 0;
+			pc <= pc + 4;
 		end
 		OP_BRANCH: begin
 			// OP_BRANCH does not propagate through the pipeline
@@ -131,6 +134,7 @@ module riscv_hart
 			EX.rd <= 0;
 			EX.access <= MEM_IDLE;
 			EX.bypass <= 0;
+			pc <= (pc + immediate); // XXX
 		end
 		OP_LOAD: begin
 			EX.left <= regs[id_i.rs1];
@@ -139,6 +143,7 @@ module riscv_hart
 			EX.rd <= id_i.rd;
 			EX.access <= MEM_READ;
 			EX.bypass <= 0;
+			pc <= pc + 4;
 		end
 		OP_STORE: begin
 			EX.left <= regs[id_s.rs1];
@@ -147,18 +152,21 @@ module riscv_hart
 			EX.rd <= 0;
 			EX.access <= MEM_WRITE;
 			EX.bypass <= regs[id_s.rs2];
+			pc <= pc + 4;
 			// TODO: pass word id_s.funct3;
 		end
 		OP_MISC_MEM: begin
 			EX.funct3 <= id_i.funct3;
 			EX.rd <= id_i.rd;
 			EX.access <= MEM_IDLE;
+			pc <= pc + 4;
 			$display("Not implemented"); // XXX
 		end
 		OP_SYSTEM: begin
 			EX.funct3 <= id_i.funct3;
 			EX.rd <= id_i.rd;
 			EX.access <= MEM_IDLE;
+			pc <= pc + 4;
 			$display("Not implemented"); // XXX
 		end
 		default: begin
@@ -168,6 +176,7 @@ module riscv_hart
 			EX.funct3 <= FUNCT3_ADD;
 			EX.rd <= 0;
 			EX.access <= MEM_IDLE;
+			pc <= pc + 4;
 		end
 		endcase
 
