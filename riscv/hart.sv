@@ -281,9 +281,9 @@ module riscv_hart
 
 	always @(posedge clk or posedge rst)  // always_ff
 		if (~rst)
-			$display(">", EX.rl, ":", EX.left, " | ", EX.rr, ":", EX.right,
-					" => ", EX.rd);
-
+			$display(EX.rd, " <= ",
+					EX.rl, ":", EX.left, " | ",
+					EX.rr, ":", EX.right);
 
 	// XXX: currently there is no option to correctly bypass left value
 	always @(posedge clk or posedge rst)  // always_ff
