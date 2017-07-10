@@ -64,6 +64,7 @@ module riscv_hart
 	assign id_s = id_format.s;
 	assign id_b = id_format.b;
 
+	// immediate decoder
 	always @* // always_comb
 		case (instruction.opcode)
 		OP_LUI, OP_AUIPC:
@@ -82,11 +83,12 @@ module riscv_hart
 			immediate = 0;
 		endcase
 
-	always @(instruction) // XXX: always_comb
+	// branch unit
+	always @* // XXX: always_comb
 		case (id_b.funct3)
 		FUNCT3_BEQ:
 			id_branch = regs[id_b.rs1] === regs[id_b.rs2];
-		FUNCT3_BNEQ:
+		FUNCT3_BNE:
 			id_branch = regs[id_b.rs1] !== regs[id_b.rs2];
 		FUNCT3_BLT:
 			id_branch = $signed(regs[id_b.rs1]) < $signed(regs[id_b.rs2]);
@@ -98,6 +100,7 @@ module riscv_hart
 			id_branch = regs[id_b.rs1] >= regs[id_b.rs2];
 		endcase
 
+	// instruction decoder
 	always @(posedge clk or posedge rst) // always_ff
 		if (rst) begin
 			EX.left <= 0;

@@ -34,7 +34,7 @@ typedef enum logic [2:0] {
 
 typedef enum logic [2:0] {
 	FUNCT3_BEQ  = 3'b000,
-	FUNCT3_BNEQ = 3'b001,
+	FUNCT3_BNE = 3'b001,
 	FUNCT3_BLT  = 3'b010,
 	FUNCT3_BLTU = 3'b011,
 	FUNCT3_BGE  = 3'b100,
