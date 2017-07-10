@@ -24,15 +24,31 @@ module riscv_hart
 	always @(posedge clk or posedge rst) // always_ff
 		if (rst)
 			pc <= 0;
-		else if (clk)
-			pc <= pc + 4; // TODO: support branch and jump
+		else case (instruction.opcode)
+		OP_JALR, OP_JAL:
+			pc <= id_pc + immediate;
+		OP_BRANCH:
+			if (id_branch)
+				pc <= id_pc + immediate;
+			else
+				pc <= id_pc + 4;
+		default:
+			pc <= id_pc + 4;
+		endcase
+
+	always @(posedge clk or posedge rst) // always_ff
+		if (rst)
+			id_pc <= 0;
+		else
+			id_pc <= pc;
 
 	// ID - Instruction Decode
 
 	// XXX: should be internal only, exporting only for testing
 	logic [XLEN-1:0] regs [0:REGN-1];
 	logic [XLEN-1:0] immediate;
-
+	logic id_branch;
+	logic [XLEN-1:0] id_pc;
 	instruction_r_t id_r;
 	instruction_i_t id_i;
 	instruction_u_t id_u;
@@ -44,6 +60,7 @@ module riscv_hart
 	assign id_r = id_format.r;
 	assign id_i = id_format.i;
 	assign id_u = id_format.u;
+	assign id_j = id_format.j;
 	assign id_s = id_format.s;
 	assign id_b = id_format.b;
 
@@ -55,7 +72,7 @@ module riscv_hart
 			immediate = $signed(id_i.immi); // sign extend
 		OP_JAL:
 			immediate = $signed({id_j.immj3, id_j.immj2,
-								 id_j.immj1, id_j.immj0});
+								 id_j.immj1, id_j.immj0, 1'b0});
 		OP_STORE:
 			immediate = $signed({id_s.imms1, id_s.imms0});
 		OP_BRANCH:
@@ -63,7 +80,23 @@ module riscv_hart
 								 id_b.immb1, id_b.immb0, 1'b0}); // << 1
 		default: // OP
 			immediate = 0;
-		endcase	
+		endcase
+
+	always @(instruction) // XXX: always_comb
+		case (id_b.funct3)
+		FUNCT3_BEQ:
+			id_branch = regs[id_b.rs1] === regs[id_b.rs2];
+		FUNCT3_BNEQ:
+			id_branch = regs[id_b.rs1] !== regs[id_b.rs2];
+		FUNCT3_BLT:
+			id_branch = $signed(regs[id_b.rs1]) < $signed(regs[id_b.rs2]);
+		FUNCT3_BLTU:
+			id_branch = regs[id_b.rs1] < regs[id_b.rs2];
+		FUNCT3_BGE :
+			id_branch = $signed(regs[id_b.rs1]) >= $signed(regs[id_b.rs2]);
+		FUNCT3_BGEU:
+			id_branch = regs[id_b.rs1] >= regs[id_b.rs2];
+		endcase
 
 	always @(posedge clk or posedge rst) // always_ff
 		if (rst) begin
@@ -170,7 +203,6 @@ module riscv_hart
 			EX.access <= MEM_IDLE;
 		end
 		endcase
-
 
 	// EX - Execution
 
