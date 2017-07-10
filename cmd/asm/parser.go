@@ -111,6 +111,11 @@ func parseCommand(tokens []string) (Instruction, error) {
 			return nil, ErrWrongInstrunctionFormat
 		}
 		return parseInstructionJ(OpJal, "zero", tokens[1])
+	case "halt":
+		if len(tokens) != 1 {
+			return nil, ErrWrongInstrunctionFormat
+		}
+		return parseInstructionJ(OpJal, "zero", "0")
 	case "fence", "fence.i", "ecall", "ebreak", "csrrw", "csrrs", "csrrc",
 		"csrrwi", "csrrsi", "csrrci":
 		return nil, ErrNotImplemented
