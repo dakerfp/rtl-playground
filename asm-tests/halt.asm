@@ -5,9 +5,9 @@ _start: # clocks 64
 	nop
 	nop
 	nop
-	sw zero, 0(t0)
+	sw t0, 0(zero)
 	halt
-	sw zero, 0(t1)
+	sw t1, 0(zero)
 	nop
 	nop
-	sw zero, 0(t0) # assert mem[0] == 876
+	sw t0, 0(zero) # assert mem[0] == 876
