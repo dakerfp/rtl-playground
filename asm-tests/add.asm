@@ -3,13 +3,8 @@
 _start:
 	li t0, 2 # load 2
 	li t1, 40 # load 40
-	nop
-	nop
-	nop
-	nop
+	# nop
 	add t2, t0, t1 # 40 + 2
-	nop
-	nop
 	nop
 	nop
 	sw t0, 0(zero) # assert mem[0] == 2

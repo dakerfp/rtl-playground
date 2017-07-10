@@ -103,6 +103,8 @@ module riscv_hart
 	// instruction decoder
 	always @(posedge clk or posedge rst) // always_ff
 		if (rst) begin
+			EX.rl <= 0;
+			EX.rr <= 0;
 			EX.left <= 0;
 			EX.right <= 0;
 			EX.funct3 <= FUNCT3_ADD;
@@ -112,6 +114,8 @@ module riscv_hart
 		end
 		else case (instruction.opcode)
 		OP_LUI: begin
+			EX.rl <= 0;
+			EX.rr <= 0;
 			EX.left <= immediate;
 			EX.right <= 0;
 			EX.funct3 <= FUNCT3_ADD;
@@ -120,6 +124,8 @@ module riscv_hart
 			EX.bypass <= 0;
 		end
 		OP_JAL: begin
+			EX.rl <= 0;
+			EX.rr <= 0;
 			EX.left <= pc;
 			EX.right <= 4;
 			EX.funct3 <= FUNCT3_ADD;
@@ -128,6 +134,8 @@ module riscv_hart
 			EX.bypass <= 0;
 		end
 		OP_AUIPC: begin
+			EX.rl <= 0;
+			EX.rr <= 0;
 			EX.left <= pc;
 			EX.right <= immediate;
 			EX.funct3 <= FUNCT3_ADD;
@@ -136,6 +144,8 @@ module riscv_hart
 			EX.bypass <= 0;
 		end
 		OP_JALR: begin
+			EX.rl <= 0;
+			EX.rr <= 0;
 			EX.left <= pc;
 			EX.right <= 4;
 			EX.funct3 <= id_i.funct3;
@@ -144,6 +154,8 @@ module riscv_hart
 			EX.bypass <= 0;
 		end
 		OP: begin
+			EX.rl <= id_r.rs1;
+			EX.rr <= id_r.rs2;
 			EX.left <= regs[id_r.rs1];
 			EX.right <= regs[id_r.rs2];
 			EX.funct3 <= id_r.funct3;
@@ -152,6 +164,8 @@ module riscv_hart
 			EX.bypass <= 0;
 		end
 		OP_IMM: begin
+			EX.rl <= id_r.rs1;
+			EX.rr <= 0;
 			EX.left <= regs[id_i.rs1];
 			EX.right <= immediate;
 			EX.funct3 <= id_i.funct3;
@@ -161,6 +175,8 @@ module riscv_hart
 		end
 		OP_BRANCH: begin
 			// OP_BRANCH does not propagate through the pipeline
+			EX.rl <= 0;
+			EX.rr <= 0;
 			EX.left <= 0;
 			EX.right <= 0;
 			EX.funct3 <= FUNCT3_ADD;
@@ -169,6 +185,8 @@ module riscv_hart
 			EX.bypass <= 0;
 		end
 		OP_LOAD: begin
+			EX.rl <= id_i.rs1;
+			EX.rr <= 0;
 			EX.left <= regs[id_i.rs1];
 			EX.right <= immediate;
 			EX.funct3 <= id_i.funct3;
@@ -177,6 +195,8 @@ module riscv_hart
 			EX.bypass <= 0;
 		end
 		OP_STORE: begin
+			EX.rl <= id_s.rs1;
+			EX.rr <= 0;
 			EX.left <= regs[id_s.rs1];
 			EX.right <= immediate;
 			EX.funct3 <= FUNCT3_ADD;
@@ -186,18 +206,24 @@ module riscv_hart
 			// TODO: pass word id_s.funct3;
 		end
 		OP_MISC_MEM: begin
+			EX.rl <= 0;
+			EX.rr <= 0;
 			EX.funct3 <= id_i.funct3;
 			EX.rd <= id_i.rd;
 			EX.access <= MEM_IDLE;
 			$display("Not implemented"); // XXX
 		end
 		OP_SYSTEM: begin
+			EX.rl <= 0;
+			EX.rr <= 0;
 			EX.funct3 <= id_i.funct3;
 			EX.rd <= id_i.rd;
 			EX.access <= MEM_IDLE;
 			$display("Not implemented"); // XXX
 		end
 		default: begin
+			EX.rl <= 0;
+			EX.rr <= 0;
 			EX.invert <= 0;
 			EX.left <= 0;
 			EX.right <= 0;
@@ -211,6 +237,8 @@ module riscv_hart
 
 	struct packed {
 		logic invert;
+		reg_t rl;
+		reg_t rr;
 		logic [XLEN-1:0] left;
 		logic [XLEN-1:0] right;
 		logic [XLEN-1:0] bypass;
@@ -219,8 +247,43 @@ module riscv_hart
 		mem_access_t access;
 	} EX;
 
+	// FU - Forward Unit
+	logic [XLEN-1:0] ex_left;
+	always @*  // always_comb
+		if (EX.rl == 0)
+			ex_left = EX.left;
+		else if (MA.rd == EX.rl)
+			if (MA.access != MEM_READ)
+				ex_left = MA.result;
+			else
+				$display("XXX: MEM_READ error!");
+		else if (WB.rd == EX.rl)
+			ex_left = WB.result;
+		else
+			ex_left = EX.left;
+
+	logic [XLEN-1:0] ex_right;
+	always @*  // always_comb
+		if (EX.rr == 0)
+			ex_right = EX.right;
+		else if (MA.rd == EX.rr)
+			if (MA.access != MEM_READ)
+				ex_right = MA.result;
+			else
+				$display("XXX: MEM_READ error!");
+		else if (WB.rd == EX.rr)
+			ex_right = WB.result;
+		else
+			ex_right = EX.right;
+
 	logic [SHAMTN-1:0] ex_shamt;
-	assign ex_shamt = EX.right[SHAMTN-1:0];
+	assign ex_shamt = ex_right[SHAMTN-1:0];
+
+	always @(posedge clk or posedge rst)  // always_ff
+		if (~rst)
+			$display(">", EX.rl, ":", EX.left, " | ", EX.rr, ":", EX.right,
+					" => ", EX.rd);
+
 
 	// XXX: currently there is no option to correctly bypass left value
 	always @(posedge clk or posedge rst)  // always_ff
@@ -228,24 +291,24 @@ module riscv_hart
 			MA.result <= 0;
 		else case (EX.funct3) // unique
 		FUNCT3_ADD:
-			MA.result <= $signed(EX.left) + $signed(EX.right);
+			MA.result <= $signed(ex_left) + $signed(ex_right);
 	 	FUNCT3_SLL:
-	 		MA.result <= EX.left << ex_shamt;
+	 		MA.result <= ex_left << ex_shamt;
 		FUNCT3_SLT:
-			MA.result <= $signed(EX.left) < $signed(EX.right);
+			MA.result <= $signed(ex_left) < $signed(ex_right);
 		FUNCT3_SLTU:
-			MA.result <= EX.left < EX.right;
+			MA.result <= ex_left < ex_right;
 		FUNCT3_XOR:
-			MA.result <= EX.left ^ EX.right;
+			MA.result <= ex_left ^ ex_right;
 		FUNCT3_SRL_SRA:
 			if (EX.invert)
-				MA.result <= $signed(EX.left) >>> ex_shamt;
+				MA.result <= $signed(ex_left) >>> ex_shamt;
 			else
 				MA.result <= EX.left >> ex_shamt;
 		FUNCT3_OR:
-			MA.result <= EX.left | EX.right;
+			MA.result <= ex_left | ex_right;
 		FUNCT3_AND:
-			MA.result <= EX.left & EX.right;
+			MA.result <= ex_left & ex_right;
 		default:
 			MA.result <= 0;
 		endcase
