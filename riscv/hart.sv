@@ -202,7 +202,7 @@ module riscv_hart
 			EX.funct3 <= FUNCT3_ADD;
 			EX.rd <= 0;
 			EX.access <= MEM_WRITE;
-			EX.bypass <= regs[id_s.rs2];
+			EX.bypass <= id_s.rs2;
 			// TODO: pass word id_s.funct3;
 		end
 		OP_MISC_MEM: begin
@@ -241,7 +241,7 @@ module riscv_hart
 		reg_t rr;
 		logic [XLEN-1:0] left;
 		logic [XLEN-1:0] right;
-		logic [XLEN-1:0] bypass;
+		logic [REGA-1:0] bypass;
 		funct3_t funct3;
 		reg_t rd;
 		mem_access_t access;
@@ -334,7 +334,7 @@ module riscv_hart
 	// MA - Memory Access
 	struct packed {
 		logic [XLEN-1:0] result;
-		logic [XLEN-1:0] bypass;
+		logic [REGA-1:0] bypass;
 		mem_access_t access;
 		reg_t rd;
 	} MA;
@@ -367,7 +367,10 @@ module riscv_hart
 		end
 		MEM_WRITE: begin
 			mem_addr <= MA.result;
-			mem_data <= MA.bypass;
+			if (WB.rd == MA.bypass) // Forwarded from WB
+				mem_data <= WB.result;
+			else
+				mem_data <= regs[MA.bypass];
 			mem_write <= 1;
 			WB.result <= 0;
 			WB.rd <= 0;
